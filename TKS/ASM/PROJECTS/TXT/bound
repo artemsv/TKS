@@ -1,0 +1,50 @@
+  File  Edit  Search  Run  Assemble  Debug  Tools  Options  Window  Help   14 54
+ÉÍ[ş]ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ Help ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ[]Í»
+º                                                                              
+º  BOUND - Array Index Bound Check (80188+) Ü                                  ş
+º  ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß                                  ±
+º                                                                              ±
+º  Usage:                                Opcode:                               ±
+º                                                                              ±
+º   BOUND Gw,Ma                           62h /r                               ±
+º                                                                              ±
+º  Flags:  OF SF ZF AF PF CF TF IF DF NT RF                                    ±
+º  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ                                    ±
+º  state:                                                                      ±
+º                                                                              ±
+º  CPUÿmode:  PM       RM      VM                                              ±
+º  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ                                    ±
+º  Faults:    INT5     INT5    INT5                                            ±
+º             #UD      INT6    #UD          *                                  ±
+º             #SF(0)                                                           ±
+º             #GP(0)   INT0D   #GP(0)                                          ±
+º             #PF(ec)          #PF(ec)                                         ±
+º             #AC(0)           #AC(0)                                          ±
+º                                                                              
+ÈÍş±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±ÄÙ
+ F1 Help on help  Alt+F1 Previous topic  Shift+F1 Help index
+  File  Edit  Search  Run  Assemble  Debug  Tools  Options  Window  Help   14 54
+ÉÍ[ş]ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ Help ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ[]Í»
+º                                                                              
+º  * #UD occurs only if the second operand specifies a register.               ±
+º                                                                              ±
+º  Pairable: NP                                                                ±
+º                                                                              ±
+º Array index in source register is checked against upper and lower bounds in  ±
+º memory source. The first word located at "limit" is the lower boundary and   ±
+º the word at "limit+2" is the upper array bound. Interrupt 5 occurs if the    ±
+º source value is less than or higher than the source.                         ±
+º                                                                              ±
+º                           Clocks                    Size                     ±
+º  Operands         808x  286   386   486   586       Bytes                    ±
+º  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ             ±
+º  reg16,mem32       -   nj=13 nj=10   7               2                       ±
+º  reg32,mem64       -   nj=13 nj=10   7               2                       ±
+º ÿÿÿ                                                                          ±
+º ÿşÿnj = no jump taken                                                        ±
+º                                                                              ±
+º  ş see: InstructionÿTiming                                                   ±
+º         Notation                                                             ş
+º  ÿ                                                                           
+ÈÍş±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±ÄÙ
+ F1 Help on help  Alt+F1 Previous topic  Shift+F1 Help index

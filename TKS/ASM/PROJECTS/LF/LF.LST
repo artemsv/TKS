@@ -1,0 +1,194 @@
+Turbo Assembler	 Version 4.1	    09/09/96 03:09:07	    Page 1
+d:\asm\projects\lf\lf.ASM
+
+
+
+      1					 ;05.12.02
+      2	    0000			 .model	tiny
+      3					 .586
+      4					 org 100h
+      5	    0000			 .code
+      6					   extrn FileRead:proc,FileOpen:proc,Readln:proc,Writeln:proc
+      7					 .startup
+1     8	    0100			 @Startup:
+      9	    0100  E9 114B		   jmp	 EndData
+     10	    0103  1000*(00)		   buf	 db 4096 dup(0)
+     11	    1103  0D 0A	87 A0 A3 E0 E3+	   msg1	 db 13,10,'Загрузчик шрифтовых файлов в	знакогенератор',13,10
+     12		  A7 E7	A8 AA 20 E8 E0+
+     13		  A8 E4	E2 AE A2 EB E5+
+     14		  20 E4	A0 A9 AB AE A2+
+     15		  20 A2	20 A7 AD A0 AA+
+     16		  AE A3	A5 AD A5 E0 A0+
+     17		  E2 AE	E0 0D 0A
+     18	    1132  56 65	72 73 69 6F 6E+		 db 'Version 1.2 (c) Copyright 2002 by Sokol Software ',13,10,10,'$'
+     19		  20 31	2E 32 20 28 63+
+     20		  29 20	43 6F 70 79 72+
+     21		  69 67	68 74 20 32 30+
+     22		  30 32	20 62 79 20 53+
+     23		  6F 6B	6F 6C 20 53 6F+
+     24		  66 74	77 61 72 65 20+
+     25		  0D 0A	0A 24
+     26	    1167  82 A2	A5 A4 A8 E2 A5+	   msg3	 db 'Введите имя файла шрифтов в формате AFF 1.0',13,10,'$'
+     27		  20 A8	AC EF 20 E4 A0+
+     28		  A9 AB	A0 20 E8 E0 A8+
+     29		  E4 E2	AE A2 20 A2 20+
+     30		  E4 AE	E0 AC A0 E2 A5+
+     31		  20 41	46 46 20 31 2E+
+     32		  30 0D	0A 24
+     33	    1195  8D A5	AF E0 A0 A2 A8+	   msg4	 db 'Неправильный формат файла',13,10,'$'
+     34		  AB EC	AD EB A9 20 E4+
+     35		  AE E0	AC A0 E2 20 E4+
+     36		  A0 A9	AB A0 0D 0A 24
+     37	    11B1  8E E8	A8 A1 AA A0 20+	   msg5	 db 'Ошибка доступа к файлу',13,10,'$'
+     38		  A4 AE	E1 E2 E3 AF A0+
+     39		  20 AA	20 E4 A0 A9 AB+
+     40		  E3 0D	0A 24
+     41	    11CA  98 E0	A8 E4 E2 EB 20+	   msg6	 db 'Шрифты установлены',13,10,'$'
+     42		  E3 E1	E2 A0 AD AE A2+
+     43		  AB A5	AD EB 0D 0A 24
+     44	    11DF  98 E0	A8 E4 E2 EB 20+	   msg7	 db 'Шрифты не установлены',13,10,'$'
+     45		  AD A5	20 E3 E1 E2 A0+
+     46		  AD AE	A2 AB A5 AD EB+
+     47		  0D 0A	24
+     48	    11F7  3F*(03)		   file	 db 63 dup(3)
+     49	    1236  41 46	46 20 31 2E 30+	   sign1 db 'AFF 1.0',16,255,255,28
+     50		  10 FF	FF 1C
+     51	    1241  0B*(04)		   sign2 db 11 dup(4)
+     52	    124C  ????			   h	 dw  ?
+     53	    124E			 EndData:
+     54	    124E  BA 1103r		   lea dx,msg1
+     55	    1251  E8 0000e		   call	Writeln
+     56	    1254  BA 1167r		   lea dx,msg3
+     57	    1257  E8 0000e		   call	Writeln
+Turbo Assembler	 Version 4.1	    09/09/96 03:09:07	    Page 2
+d:\asm\projects\lf\lf.ASM
+
+
+
+     58	    125A  BA 11F7r		   lea dx,file
+     59	    125D  B1 3F			   mov cl,63		 ;размер буфера	ввода
+     60	    125F  E8 0000e		   call	Readln		 ;ввод имени файла
+     61	    1262  83 FE	00		   cmp si,0		 ;в SI - длина строки
+     62	    1265  0F 84	0088		   je not_inst		 ;если ввели пустую строку
+     63	    1269  C6 84	11F7r 00	   mov file[si],0	 ;ограничиваем имя файла
+     64	    126E  C6 84	11F8r 0D	   mov file[si+1],13
+     65	    1273  C6 84	11F9r 0A	   mov file[si+2],10
+     66	    1278  C6 84	11FAr 07	   mov file[si+3],7
+     67	    127D  C6 84	11FBr 24	   mov file[si+4],'$'
+     68	    1282  B0 00			   mov al,0
+     69	    1284  E8 0000e		   call	FileOpen
+     70	    1287  73 11	90 90		   jnc no_err
+     71	    128B  BA 11F7r		   lea dx,file
+     72	    128E  E8 0000e		   call	Writeln
+     73	    1291  BA 11B1r		   lea dx,msg5
+     74	    1294  E8 0000e		   call	Writeln
+     75	    1297  EB 58	90		   jmp not_inst
+     76	    129A			 no_err:
+     77					 ;считываем заголовок файла
+     78	    129A  A3 124Cr		   mov h,ax		 ;сохраняем дескриптор файла
+     79	    129D  8B D8			   mov bx,ax		 ;дескриптор файла
+     80	    129F  BA 1241r		   lea dx,sign2		 ;буфер	ввода
+     81	    12A2  B9 000B		   mov cx,11		 ;размер буфера	ввода
+     82	    12A5  E8 0000e		   call	FileRead
+     83
+     84					 ; сравниваем заголовок	файла с	эталонной сигнатурой
+     85
+     86	    12A8  BE 1236r		   lea si,sign1
+     87	    12AB  BF 1241r		   lea di,sign2
+     88	    12AE  1E			   push	ds
+     89	    12AF  07			   pop es
+     90	    12B0  B9 000B		   mov cx,11
+     91	    12B3  F3> A6		   rep cmpsb
+     92	    12B5  74 0B	90 90		   je good
+     93	    12B9  BA 1195r		   lea dx,msg4
+     94	    12BC  E8 0000e		   call	Writeln
+     95	    12BF  EB 30	90		   jmp not_inst
+     96
+     97					 ;считываем двоичные образы шрифтов
+     98
+     99	    12C2			 good:
+    100	    12C2  BA 0103r		   lea dx,buf
+    101	    12C5  B9 1000		   mov cx,4096
+    102	    12C8  8B 1E	124Cr		   mov bx,h
+    103	    12CC  E8 0000e		   call	FileRead
+    104	    12CF  72 20	90 90		   jc not_inst
+    105
+    106					 ;зарузка знакогенератора
+    107
+    108	    12D3  BA 0103r		   lea dx,buf
+    109	    12D6  8B EA			   mov bp,dx
+    110	    12D8  B4 11			   mov ah,11h
+    111	    12DA  B0 00			   mov al,0
+    112	    12DC  B9 0100		   mov cx,256		 ;количество символов
+    113	    12DF  BA 0000		   mov dx,0
+    114	    12E2  B3 00			   mov bl,0
+Turbo Assembler	 Version 4.1	    09/09/96 03:09:07	    Page 3
+d:\asm\projects\lf\lf.ASM
+
+
+
+    115	    12E4  B7 10			   mov bh,16
+    116	    12E6  CD 10			   int 10h
+    117	    12E8  BA 11CAr		   lea dx,msg6
+    118	    12EB  E8 0000e		   call	Writeln
+    119	    12EE  EB 07	90		   jmp quit
+    120
+    121	    12F1			 not_inst:
+    122	    12F1  BA 11DFr		   lea dx,msg7
+    123	    12F4  E8 0000e		   call	Writeln
+    124	    12F7			 quit:
+    125	    12F7  B8 4C00		   mov	 ax, 4c00h
+    126	    12FA  CD 21			   int	 21h
+    127					 end
+Turbo Assembler	 Version 4.1	    09/09/96 03:09:07	    Page 4
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "09/09/96"
+??FILENAME			  Text	 "lf	  "
+??TIME				  Text	 "03:09:07"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 DGROUP
+@CODESIZE			  Text	 0
+@CPU				  Text	 0000H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 LF
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 1
+@STACK				  Text	 DGROUP
+@STARTUP			  Near	 DGROUP:0100
+@WORDSIZE			  Text	 2
+BUF				  Byte	 DGROUP:0103
+ENDDATA				  Near	 DGROUP:124E
+FILE				  Byte	 DGROUP:11F7
+FILEOPEN			  Near	 DGROUP:---- Extern
+FILEREAD			  Near	 DGROUP:---- Extern
+GOOD				  Near	 DGROUP:12C2
+H				  Word	 DGROUP:124C
+MSG1				  Byte	 DGROUP:1103
+MSG3				  Byte	 DGROUP:1167
+MSG4				  Byte	 DGROUP:1195
+MSG5				  Byte	 DGROUP:11B1
+MSG6				  Byte	 DGROUP:11CA
+MSG7				  Byte	 DGROUP:11DF
+NOT_INST			  Near	 DGROUP:12F1
+NO_ERR				  Near	 DGROUP:129A
+QUIT				  Near	 DGROUP:12F7
+READLN				  Near	 DGROUP:---- Extern
+SIGN1				  Byte	 DGROUP:1236
+SIGN2				  Byte	 DGROUP:1241
+WRITELN				  Near	 DGROUP:---- Extern
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+  _TEXT				  16  12FC Word	  Public  CODE
+

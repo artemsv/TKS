@@ -1,0 +1,620 @@
+|1
+     Choose the antonym to the underlined word
+
+     I can neither work nor ...
+                   ----
+#1
+     came
+#2
+     go
+#3
+     step
+#4
+     play
+#5
+     walk
+@00020@
+|2
+     Choose the synonym to the underlined word
+
+     I liked to read books about travels in my childhood.
+                                 -------
+#1
+     rests
+#2
+     walks
+#3
+     plays
+#4
+     journeys
+#5
+     balls
+@00020@
+|3
+     Choose the appropriate pronoun
+
+     ... can be changed: what's the use of worrying?
+#1
+     something
+#2
+     anything
+#3
+     nothing
+#4
+     nobody
+#5
+     nowhere
+@00200@
+|4
+     Choose the appropriate modal verb
+
+     You ... worry; this problem is not so serious.
+#1
+     may not
+#2
+     needn't
+#3
+     must
+#4
+     have to
+#5
+     doesn't
+@02000@
+|5
+     Choose the appropriate modal verb
+
+     I don't mean that you ... do everything they tell you.
+#1
+     can't
+#2
+     may
+#3
+     must
+#4
+     need
+#5
+     can
+@00200@
+|6
+     Choose the appropriate modal verb
+
+     He ... come here tomorrow.
+#1
+     will be
+#2
+     is to
+#3
+     need
+#4
+     have to
+#5
+     may
+@02000@
+|7
+     Choose the appropriate modal verb
+
+     He said that he ... speak Jerman.
+#1
+     could
+#2
+     can
+#3
+     must
+#4
+     have to
+#5
+     mustn't
+@20000@
+|8
+     Choose the appropriate form of the verb
+
+     The letter ... yesterday.
+#1
+     is received
+#2
+     received
+#3
+     was received
+#4
+     had received
+#5
+     was receiving
+@00200@
+|9
+     Choose the appropriate form of the verb
+
+     Nick ... to Moscow next week.
+#1
+     was sent
+#2
+     is sending
+#3
+     will send
+#4
+     is sent
+#5
+     will be sent
+@00002@
+|10
+     Choose the appropriate form of the verb
+
+     Many houses ... during the Great Fire of London.
+#1
+     are burning
+#2
+     were burning
+#3
+     have burnt
+#4
+     to be burnt
+#5
+     were burnt
+@00002@
+|11
+     Choose the appropriate form of the verb
+
+     He lives in New York.
+     I thought that he ... in New York.
+#1
+     is living
+#2
+     lived
+#3
+     had lived
+#4
+     has lived
+#5
+     has been living
+@02000@
+|12
+     Choose the appropriate form of the verb
+
+     He bought a new car.
+     I heard that he ... a new car.
+#1
+     bought
+#2
+     would have bought
+#3
+     had bought
+#4
+     was buying
+#5
+     has bought
+@00200@
+|13
+     Choose the appropriate adjective
+
+     I have ... time than he.
+#1
+     small
+#2
+     fewer
+#3
+     less
+#4
+     many
+#5
+     little
+@00200@
+|14
+     Choose the appropriate adjective
+
+     He is as ... as my brother.
+#1
+     younger
+#2
+     the youngest
+#3
+     young
+#4
+     bigger
+#5
+     older
+@00200@
+|15
+     Choose the appropriate adjective
+
+     He is ... of my friends.
+#1
+     good
+#2
+     better
+#3
+     smaller
+#4
+     the best
+#5
+     taller
+@00020@
+|16
+     Choose the correct form of the verb
+
+     They considered themselves that they ... .
+#1
+     was right
+#2
+     would right
+#3
+     to be right
+#4
+     were right
+#5
+     be right
+@00020@
+|17
+     Choose the correct form of the verb
+
+     We were the last ... the concert hall.
+#1
+     to enter
+#2
+     entering
+#3
+     entered
+#4
+     was entering
+#5
+     was entered
+@20000@
+|18
+     Choose the appropriate pronoun
+
+     Do you know which of them will go ... the
+     business trip.
+#1
+     to
+#2
+     for
+#3
+     in
+#4
+     on
+#5
+     into
+@00020@
+|19
+     Choose the right order to make up a story
+1. Today, they want to surprise him with the presents.
+2.Last week Nancy and Tom bought  presents  for  Father's day.
+3.They hit them so that their father could    see them.
+4.They both  say:"Happy  Father's Day,  Dad",as they hand
+him their gifts.
+5. Nancy  is  giving  him  a  portable  radio  and Tom an
+electric shaver.
+#1
+     14532
+#2
+     32145
+#3
+     12345
+#4
+     31254
+#5
+     23154
+@00002@
+|20
+   Choose a proper proverb
+Allen: Haven't I seen you somewhere before?
+Julia: No, I don't think so.
+Allen: But your face is so familiar.  Wait a minute.  I
+     know. We were on the same flight to New York last mouth.
+Julia: Oh,  yes.  Now  I remember.  What a coincidence to
+     meet in San Francisco!
+Allen: ...................................................
+#1
+     A blind man will not thank you for a looking glass.
+#2
+     Either I'll find a way, or I'll make one.
+#3
+     Curiosity killed a cat.
+#4
+     Well, you know what they say - it's a small world.
+#5
+     East or West home is best.
+@00020@
+|21
+     Choose the appropriate modal verb
+
+     I was glad I ...  finish my  homework  before  the  movie
+     began.
+#1
+     had to
+#2
+     was able to
+#3
+     must
+#4
+     can
+#5
+     should
+@02000@
+|22
+     Choose the correct form of the verb
+
+     How long ... you to get to the Institute.
+#1
+     does it take
+#2
+     it takes
+#3
+     it took
+#4
+     has it taken
+#5
+     will it take
+@20000@
+|23
+     Choose the appropriate pronoun
+
+     You don't have to cross the street. The house is ...  this
+     side.
+#1
+     on
+#2
+     at
+#3
+     in
+#4
+     ____
+#5
+     near
+@20000@
+|24
+     Choose the appropriate question
+
+     You have to work hard ... ?
+#1
+     do you?
+#2
+     haven't you?
+#3
+     have you?
+#4
+     doesn't you?
+#5
+     don't you?
+@00002@
+|25
+     Choose the appropriate question
+
+     Nick spent his holiday at the seaside last summer, ... ?
+#1
+     did he?
+#2
+     didn't he?
+#3
+     wasn't he?
+#4
+     could he?
+#5
+     can't he
+@02000@
+|26
+     Choose the correct word
+
+     What is the state system of the U.K.?
+#1
+     monarchy
+#2
+     parliament
+#3
+     republic
+#4
+     constitutional monarchy
+#5
+     kingdom
+@00020@
+|27
+     Choose the correct word
+
+     What is the British weather like?
+#1
+     continental
+#2
+     subtropical
+#3
+     tropical
+#4
+     mild
+#5
+     severe
+@00020@
+|28
+     Choose the correct answer
+
+     Do Wales,  Scotland  and  Northern Ireland have their own
+     language?
+#1
+     Yes,they do.
+#2
+     No,they don't
+#3
+     Some do
+#4
+     none do
+#5
+     all do
+@20000@
+|29
+     Choose the correct writer
+
+     Who is the most popular British writer?
+#1
+     W.Shakespeare
+#2
+     J.London
+#3
+     T.Dreiser
+#4
+     O.Balsac
+#5
+     Ch.Dickens
+@00002@
+|30
+     Choose the correct answer
+
+     At what age do children go to school in Britain?
+#1
+    at the age of four
+#2
+    at the age of three
+#3
+    at the age of five
+#4
+    at the age of seven
+#5
+    at the age of six
+@00200@
+|31
+     Find the correct answer
+
+     What is the oldest university in Britain?
+#1
+     Ethan
+#2
+     Cambridge
+#3
+     London
+#4
+     Oxford
+#5
+     Edinburgh
+@00020@
+|32
+     Find correct answer
+
+     What kind of state is Uzbekistan?
+#1
+     independent
+#2
+     federal
+#3
+     monarchy
+#4
+     dependent
+#5
+     sovereign
+@20000@
+|33
+     Find the correct answer
+
+     How many  states are there in the U.S.A. ?
+#1
+     49
+#2
+     45
+#3
+     51
+#4
+     50
+#5
+     48
+@00020@
+|34
+     Find the correct answer
+
+     When was the decree of the national language accepted?
+#1
+     1993
+#2
+     1991
+#3
+     1990
+#4
+     1989
+#5
+     1994
+@00020@
+|35
+     Find the correct answer
+
+     When was  the  1-st President of the Intependent Repuplic
+     of Uzbekistan elected?
+#1
+     December 1991
+#2
+     March 1990
+#3
+     June 1989
+#4
+     May 1986
+#5
+     June 1987
+@20000@
+|36
+     Choose the appropriate articles
+
+     The first  of  ...  January is ...  great holiday in many
+     countries
+#1
+     the/a
+#2
+     -/an
+#3
+     -/a
+#4
+     the/-
+#5
+     the/the
+@00200@
+|37
+     Choose the appropriate articles
+
+     ... best runner in the race was ... young girl
+
+#1
+     a/an
+#2
+     the/an
+#3
+     -/the
+#4
+     the/the
+#5
+     the/a
+@00002@
+|38
+     Choose the appropriate articles
+
+     David picked up .. nut from ... hole
+#1
+     a/the
+#2
+     a/an
+#3
+     the/the
+#4
+     the/a
+#5
+     an/a
+@20000@
+|39
+     Choose the appropriate answer
+
+     Do you have to get up so early?
+#1
+     Yes,I shall
+#2
+     Yes,I have
+#3
+     No,I haven't
+#4
+     No,I didn't
+#5
+     No, I dont, but I like to
+@00002@
+|40
+     Choose the appropriate word logically out
+#1
+     tree
+#2
+     flower
+#3
+     bush
+#4
+     leave
+#5
+     plant
+@00020@
+

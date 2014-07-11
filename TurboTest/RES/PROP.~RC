@@ -1,0 +1,27 @@
+3011 DIALOG 39, 68, 359, 105
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Свойства темы"
+FONT 8, "MS Sans Serif"
+{
+ DEFPUSHBUTTON "Сохранить", IDOK, 296, 48, 50, 14
+ PUSHBUTTON "Отмена", IDCANCEL, 296, 76, 50, 14
+ GROUPBOX "", 145, 4, 0, 352, 100, BS_GROUPBOX
+ LTEXT "Название:", -1, 16, 12, 60, 8
+ LTEXT "Файл:", -1, 16, 24, 60, 8
+ LTEXT "Всего вопросов:", -1, 16, 36, 60, 8
+ LTEXT "Из них введено:", -1, 16, 48, 60, 8
+ LTEXT "Неправильных ответов:", -1, 16, 60, 84, 8
+ LTEXT "Дата создани\xFF:", -1, 16, 72, 60, 8
+ LTEXT "Последние изменения:", -1, 16, 85, 84, 8
+ LTEXT "Комментарий:", -1, 228, 24, 60, 8
+ LTEXT "Text", 11, 104, 12, 60, 8
+ LTEXT "Text", 12, 104, 24, 60, 8
+ LTEXT "Text", 13, 104, 36, 20, 8
+ LTEXT "Text", 14, 104, 48, 20, 8
+ LTEXT "Text", 15, 104, 60, 20, 8
+ LTEXT "Text", 16, 104, 72, 36, 8
+ LTEXT "Text", 17, 104, 84, 36, 8
+ EDITTEXT 18, 144, 36, 148, 56, ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
+ ICON 154, -1, 312, 16, 18, 20
+}
+

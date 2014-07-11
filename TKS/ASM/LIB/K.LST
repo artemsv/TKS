@@ -1,0 +1,327 @@
+Turbo Assembler	 Version 4.1	    03/09/96 18:17:05	    Page 1
+k.ASM
+
+
+
+      1					 ;k.asm-модуль процедур	обработки нажатий клавиш; дата создания:  08.01.03.
+      2
+      3	    0000			 .model	small
+      4					 .386
+      5
+      6					 extrn NextChar:proc,PrevChar:proc,PosFromChar:proc,BufL:proc,BufR:proc
+      7					 extrn buffer:word,GetStart:proc,X:byte,Y:byte,firstLine:word,curPtr:word
+      8					 extrn bufSize:word,insFlag:byte,LineEnd:proc,LineStart:proc,IsSpacer:proc
+      9					 extrn CharFromPos:proc
+     10	    0000			 .code
+     11
+     12					 PUBLIC	Plus,Minus,Down,Up,Delete,Back,CtrlY,CtrlT,CtrlR,Home,GoEnd,CtrlRight
+     13					 PUBLIC	PgDown,PgUp,CountLines,CtrlDel
+     14
+     15	    0000			 CountLines:				 ;возвращает в DX число	строк в	буфере
+     16	    0000  0F A8				 push gs
+     17	    0002  07				 pop es
+     18	    0003  33 FF				 xor di,di
+     19	    0005  33 D2				 xor dx,dx
+     20	    0007  B0 0D				 mov al,13
+     21	    0009  8B 0E	0000e			 mov cx,bufSize
+     22	    000D  FC				 cld
+     23	    000E  E3 07			 CL100:	 jcxz CL200
+     24	    0010  F2> AE			 repne scasb
+     25	    0012  75 03				 jne short CL200
+     26	    0014  42				 inc dx
+     27	    0015  EB F7				 jmp short CL100
+     28	    0017  C3			 CL200:	 ret
+     29
+     30	    0018  8B 36	0000e		 Plus:	 mov si,curPtr			 ;обрабатывает нажатие стрелки вправо
+     31	    001C  65: 80 3C 09			 cmp byte ptr gs:[si],9		 ;Tab?
+     32	    0020  75 0F	90 90			 jne P100
+     33	    0024  E8 0000e			 call NextChar
+     34	    0027  80 0E	0000e 07		 or X,7
+     35	    002C  FE 06	0000e			 inc X
+     36	    0030  C3				 ret
+     37	    0031			 P100:
+     38	    0031  E8 0000e			 call NextChar
+     39	    0034  E8 0000e			 call PosFromChar
+     40	    0037  C3				 ret
+     41
+     42	    0038  8B 36	0000e		 Minus:	 mov si,curPtr			 ;обрабатывает нажатие стрелки влево
+     43	    003C  0B F6				 or si,si			 ;не равно ли SI нулю?
+     44	    003E  74 18				 je short M300			 ;равно-тек.поз.первый символ в	буфере
+     45	    0040  65: 80 7C FF 09		 cmp byte ptr gs:[si-1],9	 ;Tab?
+     46	    0045  75 0B				 jne short M100
+     47	    0047  E8 0000e			 call PrevChar
+     48	    004A  E8 0000e			 call PrevChar
+     49	    004D  E8 0000e			 call NextChar
+     50	    0050  EB 03				 jmp short M200
+     51	    0052  E8 0000e		 M100:	 call PrevChar
+     52	    0055  E8 0000e		 M200:	 call PosFromChar
+     53	    0058  C3			 M300:	 ret
+     54
+     55	    0059  8B 36	0000e		 Down:	 mov si,curPtr
+     56	    005D  E8 0000e			 call LineEnd			 ;SI-конец текущей строки
+     57	    0060  3B 36	0000e			 cmp si,bufSize
+Turbo Assembler	 Version 4.1	    03/09/96 18:17:05	    Page 2
+k.ASM
+
+
+
+     58	    0064  73 22				 jae short D200			 ;тек.позиция-последний	символ в буфере
+     59	    0066  46				 inc si
+     60	    0067  33 C0			 D050:	 xor ax,ax
+     61	    0069  A0 0000e			 mov al,X			 ;AL-желаемая позиция по X нижней строки
+     62	    006C  46			 D100:	 inc si
+     63	    006D  89 36	0000e			 mov curPtr,si
+     64	    0071  E8 0000e			 call PosFromChar
+     65	    0074  65: 80 3C 0D			 cmp byte ptr gs:[si],13
+     66	    0078  74 0E				 je short D200			 ;достигли конца строки-выход
+     67	    007A  3B 36	0000e			 cmp si,bufSize
+     68	    007E  74 08				 je short D200			 ;достигли конца буфера-выход
+     69	    0080  3A 06	0000e			 cmp al,X
+     70	    0084  77 E6				 ja short D100
+     71	    0086  EB 00				 jmp short D200
+     72	    0088  80 3E	0000e 17	 D200:	 cmp Y,23
+     73	    008D  72 06				 jb short D230
+     74	    008F  FF 06	0000e			 inc firstLine
+     75	    0093  EB 0B				 jmp short D250
+     76	    0095  80 3E	0000e 01	 D230:	 cmp Y,1
+     77	    009A  77 08				 ja short D300
+     78	    009C  FF 0E	0000e			 dec firstLine
+     79	    00A0  E8 0000e		 D250:	 call PosFromChar
+     80	    00A3  F9				 stc
+     81	    00A4  C3			 D300:	 ret
+     82
+     83	    00A5  8B 36	0000e		 Up:	 mov si,curPtr
+     84	    00A9  E8 0000e			 call LineStart
+     85	    00AC  0B F6				 or si,si
+     86	    00AE  74 D8				 je short D200			 ;первый символ	в буфере-первая	строка
+     87	    00B0  4E				 dec si
+     88	    00B1  E8 0000e			 call LineStart
+     89	    00B4  4E				 dec si
+     90	    00B5  EB B0				 jmp short D050
+     91
+     92
+     93	    00B7  8B 36	0000e		 Delete: mov si,curPtr
+     94	    00BB  65: 80 3C 0D			 cmp byte ptr gs:[si],13
+     95	    00BF  75 06	90 90			 jne DL100
+     96	    00C3  E8 0000e			 call BufL
+     97	    00C6  4E				 dec si
+     98	    00C7  E8 0000e		 DL100:	 call BufL
+     99	    00CA  C3				 ret
+    100
+    101	    00CB  8B 36	0000e		 Back:	 mov si,curPtr
+    102	    00CF  0B F6				 or si,si
+    103	    00D1  74 06				 je short B200
+    104	    00D3  E8 FF62			 call Minus
+    105	    00D6  E8 FFDE			 call Delete
+    106	    00D9  C3			 B200:	 ret
+    107
+    108	    00DA			 Home:
+    109	    00DA  8B 36	0000e			 mov si,curPtr
+    110	    00DE  E8 0000e			 call LineStart
+    111	    00E1  89 36	0000e		 H100:	 mov curPtr,si
+    112	    00E5  E8 0000e			 call PosFromChar
+    113	    00E8  C3				 ret
+    114
+Turbo Assembler	 Version 4.1	    03/09/96 18:17:05	    Page 3
+k.ASM
+
+
+
+    115	    00E9  8B 36	0000e		 GoEnd:	 mov si,curPtr
+    116	    00ED  E8 0000e			 call LineEnd
+    117	    00F0  EB EF				 jmp short H100
+    118
+    119	    00F2  83 3E	0000e 17	 PgUp:	 cmp firstLine,23
+    120	    00F7  73 08				 jnb short PU100
+    121	    00F9  C7 06	0000e 0000		 mov firstLine,0
+    122	    00FF  EB 05				 jmp short PU200
+    123	    0101  83 2E	0000e 17	 PU100:	 sub firstLine,23
+    124	    0106  C3			 PU200:	 ret
+    125
+    126	    0107  E8 FEF6		 PgDown: call CountLines
+    127	    010A  A1 0000e			 mov ax,firstLine
+    128	    010D  05 0016			 add ax,22
+    129	    0110  3B D0				 cmp dx,ax		      ;не больше ли общего кол-ва строк?
+    130	    0112  72 03				 jb short PD100
+    131	    0114  A3 0000e			 mov firstLine,ax
+    132	    0117  E8 0000e		 PD100:	 call CharFromPos
+    133	    011A  C3				 ret
+    134
+    135	    011B  8B 36	0000e		 CtrlY:	 mov si,curPtr
+    136	    011F  E8 0000e			 call LineStart
+    137	    0122  89 36	0000e			 mov curPtr,si
+    138	    0126  65: 80 3C 0D		 CY100:	 cmp byte ptr gs:[si],13
+    139	    012A  74 0B				 je short CY200
+    140	    012C  3B 36	0000e			 cmp si,bufSize
+    141	    0130  73 0B				 jae short CY300
+    142	    0132  E8 FF82			 call Delete
+    143	    0135  EB EF				 jmp short CY100
+    144	    0137  E8 FF7D		 CY200:	 call Delete				 ;#13
+    145	    013A  E8 FF7A			 call Delete				 ;#10
+    146	    013D  C3			 CY300:	 ret
+    147
+    148	    013E  8B 36	0000e		 CtrlT:	 mov si,curPtr
+    149	    0142  1E 1E	0F A8			 push ds ds gs
+    150	    0146  1F 0F	A1			 pop ds	fs
+    151	    0149  64: 3B 36 0000e	 CT100:	 cmp si,fs:bufSize
+    152	    014E  74 21				 je short CT300
+    153	    0150  AC				 lodsb
+    154	    0151  E8 0000e			 call IsSpacer
+    155	    0154  73 07				 jnc short CT200			 ;это #32,#13,#10,#9
+    156	    0156  1F				 pop ds
+    157	    0157  E8 FF5D			 call Delete
+    158	    015A  1E				 push ds
+    159	    015B  EB EC				 jmp short CT100
+    160	    015D			 CT200:
+    161	    015D  64: 3B 36 0000e		 cmp si,fs:bufSize
+    162	    0162  74 0D				 je short CT300
+    163	    0164  AC				 lodsb
+    164	    0165  E8 0000e			 call IsSpacer
+    165	    0168  72 07				 jc short CT300				 ;это печатный символ
+    166	    016A  1F				 pop ds
+    167	    016B  E8 FF49			 call Delete
+    168	    016E  1E				 push ds
+    169	    016F  EB EC				 jmp short CT200
+    170	    0171  1F			 CT300:	 pop ds
+    171	    0172  C3				 ret
+Turbo Assembler	 Version 4.1	    03/09/96 18:17:05	    Page 4
+k.ASM
+
+
+
+    172
+    173	    0173  C3			 CtrlR:	 ret
+    174
+    175	    0174			 CtrlRight:				 ;переход в начало следующего слова
+    176	    0174  8B 36	0000e			 mov si,curPtr
+    177	    0178  8B 16	0000e			 mov dx,bufSize
+    178	    017C  1E 0F	A8			 push ds gs
+    179	    017F  1F				 pop ds
+    180	    0180			 CR100:					 ;цикл пропуска	до #32 или #9
+    181	    0180  AC				 lodsb
+    182	    0181  E8 0000e			 call IsSpacer			 ;CF=1 если печатный символ
+    183	    0184  73 04				 jnc short CR200
+    184	    0186  3B F2				 cmp si,dx
+    185	    0188  72 F6				 jnae short CR100
+    186	    018A			 CR200:
+    187	    018A  3B F2				 cmp si,dx
+    188	    018C  73 06				 jae short CR300
+    189	    018E  AC				 lodsb
+    190	    018F  E8 0000e			 call IsSpacer
+    191	    0192  73 F6				 jnc short CR200
+    192	    0194			 CR300:
+    193	    0194  1F				 pop ds
+    194	    0195  4E				 dec si
+    195	    0196  89 36	0000e			 mov curPtr,si
+    196	    019A  E8 0000e			 call PosFromChar
+    197	    019D  C3				 ret
+    198
+    199	    019E			 CtrlDel:				 ;очищает от курсора до	конца строки
+    200	    019E  8B 36	0000e			 mov si,curPtr
+    201	    01A2  65: 80 3C 0D		 CD100:	 cmp byte ptr gs:[si],13
+    202	    01A6  74 0C				 je short CD200
+    203	    01A8  3B 36	0000e			 cmp si,bufSize
+    204	    01AC  74 06				 je short CD200
+    205	    01AE  E8 FF06			 call Delete
+    206	    01B1  4E				 dec si
+    207	    01B2  EB EE				 jmp short CD100
+    208	    01B4  C3			 CD200:	 ret
+    209					 end
+Turbo Assembler	 Version 4.1	    03/09/96 18:17:05	    Page 5
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "03/09/96"
+??FILENAME			  Text	 "k	  "
+??TIME				  Text	 "18:17:05"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0F0FH
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 K
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+B200				  Near	 _TEXT:00D9
+BACK				  Near	 _TEXT:00CB
+BUFFER				  Word	 ----:---- Extern
+BUFL				  Near	 ----:---- Extern
+BUFR				  Near	 ----:---- Extern
+BUFSIZE				  Word	 ----:---- Extern
+CD100				  Near	 _TEXT:01A2
+CD200				  Near	 _TEXT:01B4
+CHARFROMPOS			  Near	 ----:---- Extern
+CL100				  Near	 _TEXT:000E
+CL200				  Near	 _TEXT:0017
+COUNTLINES			  Near	 _TEXT:0000
+CR100				  Near	 _TEXT:0180
+CR200				  Near	 _TEXT:018A
+CR300				  Near	 _TEXT:0194
+CT100				  Near	 _TEXT:0149
+CT200				  Near	 _TEXT:015D
+CT300				  Near	 _TEXT:0171
+CTRLDEL				  Near	 _TEXT:019E
+CTRLR				  Near	 _TEXT:0173
+CTRLRIGHT			  Near	 _TEXT:0174
+CTRLT				  Near	 _TEXT:013E
+CTRLY				  Near	 _TEXT:011B
+CURPTR				  Word	 ----:---- Extern
+CY100				  Near	 _TEXT:0126
+CY200				  Near	 _TEXT:0137
+CY300				  Near	 _TEXT:013D
+D050				  Near	 _TEXT:0067
+D100				  Near	 _TEXT:006C
+D200				  Near	 _TEXT:0088
+D230				  Near	 _TEXT:0095
+D250				  Near	 _TEXT:00A0
+D300				  Near	 _TEXT:00A4
+DELETE				  Near	 _TEXT:00B7
+DL100				  Near	 _TEXT:00C7
+DOWN				  Near	 _TEXT:0059
+FIRSTLINE			  Word	 ----:---- Extern
+GETSTART			  Near	 ----:---- Extern
+Turbo Assembler	 Version 4.1	    03/09/96 18:17:05	    Page 6
+Symbol Table
+
+
+
+GOEND				  Near	 _TEXT:00E9
+H100				  Near	 _TEXT:00E1
+HOME				  Near	 _TEXT:00DA
+INSFLAG				  Byte	 ----:---- Extern
+ISSPACER			  Near	 ----:---- Extern
+LINEEND				  Near	 ----:---- Extern
+LINESTART			  Near	 ----:---- Extern
+M100				  Near	 _TEXT:0052
+M200				  Near	 _TEXT:0055
+M300				  Near	 _TEXT:0058
+MINUS				  Near	 _TEXT:0038
+NEXTCHAR			  Near	 ----:---- Extern
+P100				  Near	 _TEXT:0031
+PD100				  Near	 _TEXT:0117
+PGDOWN				  Near	 _TEXT:0107
+PGUP				  Near	 _TEXT:00F2
+PLUS				  Near	 _TEXT:0018
+POSFROMCHAR			  Near	 ----:---- Extern
+PREVCHAR			  Near	 ----:---- Extern
+PU100				  Near	 _TEXT:0101
+PU200				  Near	 _TEXT:0106
+UP				  Near	 _TEXT:00A5
+X				  Byte	 ----:---- Extern
+Y				  Byte	 ----:---- Extern
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+_TEXT				  16  01B5 Word	  Public  CODE
+

@@ -1,0 +1,166 @@
+Turbo Assembler	 Version 4.1	    05/09/96 00:46:49	    Page 1
+v.ASM
+
+
+
+      1	    0000			 .model	small	 ;модуль визуальных объектов	 23.01.03.
+      2					 .386
+      3	    0000			 .data
+      4
+      5	    0000  0000				 handlerPtr	 dw	 0	 ;адрес	процедуры обработки событий
+      6	    0002  0000				 initPtr	 dw	 0	 ;адрес	процедуры инициализации
+      7
+      8						 extrn buf:word
+      9
+     10					 PUBLIC	InitStd,Window,Button,initPtr,HandlerStd,handlerPtr
+     11
+     12	    0004			 .code
+     13
+     14					 extrn GetBlock:proc,FillBackBlock:proc,Win2:proc,Shadow:proc,GetMouseInfo:proc
+     15					 extrn OutDB:proc,FillWord:proc,MouseHide:proc,MouseShow:proc,KeyPressed:proc
+     16					 extrn CaretHide:proc,CaretShow:proc,PutBlock:proc
+     17
+     18	    0000			 HandlerStd:			 ;обрабатывает только Esc и щелчок по кнопке
+     19	    0000  73 1B				 jnc short HS100	 ;DX-угол,BX-размер,AX-коорд.мыши(CF=1)или код
+     20	    0002  3A E6				 cmp ah,dh		 ;клавиши
+     21	    0004  75 26				 jne short HS300
+     22	    0006  8A CA				 mov cl,dl
+     23	    0008  8A EA				 mov ch,dl
+     24	    000A  80 C1	02			 add cl,2
+     25	    000D  80 C5	04			 add ch,4
+     26	    0010  3A C5				 cmp al,ch
+     27	    0012  77 18				 ja short HS300
+     28	    0014  3A C1				 cmp al,cl
+     29	    0016  72 14				 jb short HS300
+     30	    0018  B8 0003			 mov ax,3			 ;коды выхода:0-Ok,1-Yes,2-No,3-Cancel
+     31	    001B  EB 0C				 jmp short HS200
+     32	    001D  80 FC	01		 HS100:	 cmp ah,1
+     33	    0020  74 0A				 je short HS300
+     34	    0022  3C 1B				 cmp al,27
+     35	    0024  75 06				 jne short HS300
+     36	    0026  B8 0003			 mov ax,3				 ;Cancel
+     37	    0029  F9			 HS200:	 stc					 ;CF=1 - окно закрыть
+     38	    002A  EB 01				 jmp short HS400
+     39	    002C  F8			 HS300:	 clc
+     40	    002D  C3			 HS400:	 ret
+     41
+     42	    002E			 InitStd:
+     43	    002E  C3				 ret
+     44
+     45	    002F			 Window:					 ;DX-угол,BX-размер,AX-атрибут
+     46	    002F  52 53				 push dx bx
+     47	    0031  9C				 pushf					 ;CF-признак кнопки
+     48	    0032  50				 push ax				 ;AX-атрибут заполнения	экрана
+     49	    0033  E8 0000e			 call MouseHide
+     50	    0036  E8 0000e			 call CaretHide
+     51	    0039  A1 0000e			 mov ax,buf				 ;глобальный буфер
+     52	    003C  E8 0000e			 call GetBlock
+     53	    003F  58				 pop ax
+     54	    0040  E8 0000e			 call FillBackBlock
+     55	    0043  9D				 popf					 ;восстанавливаем CF
+     56	    0044  E8 0000e			 call Win2
+     57	    0047  E8 0000e			 call Shadow
+Turbo Assembler	 Version 4.1	    05/09/96 00:46:49	    Page 2
+v.ASM
+
+
+
+     58	    004A  FF 16	0002r			 call word ptr [initPtr]	 ;параметры:DX-угол,BX-размеры
+     59	    004E  E8 0000e			 call MouseShow
+     60	    0051			 W100:
+     61	    0051  E8 0000e			 call GetMouseInfo
+     62	    0054  72 06				 jc short W300
+     63	    0056  E8 0000e			 call KeyPressed
+     64	    0059  74 F6				 jz short W100
+     65	    005B  F8			 W200:	 clc				 ;CF сброшен-событие от	клавиатуры
+     66	    005C  FF 16	0000r		 W300:	 call word ptr [handlerPtr]
+     67	    0060  73 EF				 jnc short W100			 ;CF сброшен-окно закрывать не надо
+     68	    0062  5B 5A				 pop bx	dx
+     69	    0064  50				 push ax			 ;сохраняем код	выхода
+     70	    0065  A1 0000e			 mov ax,buf
+     71	    0068  E8 0000e			 call PutBlock
+     72	    006B  E8 0000e			 call CaretShow
+     73	    006E  58				 pop ax
+     74	    006F  C3				 ret
+     75
+     76	    0070			 Button:					 ;DX-угол,SI-строка
+     77	    0070  72 04				 jc short B100
+     78	    0072  B0 20				 mov al,20h				 ;обычная кнопка
+     79	    0074  EB 02				 jmp short B200
+     80	    0076  B0 2F			 B100:	 mov al,2Fh				 ;выделенная кнопка
+     81	    0078  51 53	52		 B200:	 push cx bx dx
+     82	    007B  B9 0008			 mov cx,8
+     83	    007E  F9				 stc
+     84	    007F  E8 0000e			 call OutDB				 ;строка на кнопке
+     85	    0082  81 C2	0101			 add dx,0101h
+     86	    0086  B9 0008			 mov cx,8
+     87	    0089  B8 70DF			 mov ax,70DFh				 ;'▀'
+     88	    008C  E8 0000e			 call FillWord				 ;нижняя тень
+     89	    008F  81 C2	FF07			 add dx,0FF07h
+     90	    0093  B9 0001			 mov cx,1
+     91	    0096  B8 70DC			 mov ax,70DCh				 ;'▄'
+     92	    0099  E8 0000e			 call FillWord				 ;правая тень
+     93	    009C  5A 5B	59			 pop dx	bx cx
+     94	    009F  C3				 ret
+     95
+     96					 end
+Turbo Assembler	 Version 4.1	    05/09/96 00:46:49	    Page 3
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "05/09/96"
+??FILENAME			  Text	 "v	  "
+??TIME				  Text	 "00:46:49"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0F0FH
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 V
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+B100				  Near	 _TEXT:0076
+B200				  Near	 _TEXT:0078
+BUF				  Word	 DGROUP:---- Extern
+BUTTON				  Near	 _TEXT:0070
+CARETHIDE			  Near	 _TEXT:---- Extern
+CARETSHOW			  Near	 _TEXT:---- Extern
+FILLBACKBLOCK			  Near	 _TEXT:---- Extern
+FILLWORD			  Near	 _TEXT:---- Extern
+GETBLOCK			  Near	 _TEXT:---- Extern
+GETMOUSEINFO			  Near	 _TEXT:---- Extern
+HANDLERPTR			  Word	 DGROUP:0000
+HANDLERSTD			  Near	 _TEXT:0000
+HS100				  Near	 _TEXT:001D
+HS200				  Near	 _TEXT:0029
+HS300				  Near	 _TEXT:002C
+HS400				  Near	 _TEXT:002D
+INITPTR				  Word	 DGROUP:0002
+INITSTD				  Near	 _TEXT:002E
+KEYPRESSED			  Near	 _TEXT:---- Extern
+MOUSEHIDE			  Near	 _TEXT:---- Extern
+MOUSESHOW			  Near	 _TEXT:---- Extern
+OUTDB				  Near	 _TEXT:---- Extern
+PUTBLOCK			  Near	 _TEXT:---- Extern
+SHADOW				  Near	 _TEXT:---- Extern
+W100				  Near	 _TEXT:0051
+W200				  Near	 _TEXT:005B
+W300				  Near	 _TEXT:005C
+WIN2				  Near	 _TEXT:---- Extern
+WINDOW				  Near	 _TEXT:002F
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0004 Word	  Public  DATA
+_TEXT				  16  00A0 Word	  Public  CODE
+

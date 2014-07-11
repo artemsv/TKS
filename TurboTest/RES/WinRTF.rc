@@ -1,0 +1,22 @@
+#include "c:\Program Files\Borland\Delphi5\Projects\Test6\MConst.pas"
+
+701 MENU DISCARDABLE 
+{	
+POPUP ""                    
+  {	
+         MENUITEM "Вырезать",DOM_CUT
+         MENUITEM "Копировать",DOM_COPY
+	 MENUITEM "Вставить",DOM_PASTE
+	 MENUITEM "Удалить",DOM_DELETE
+	 MENUITEM "Отменить",DOM_UNDO
+//         MENUITEM "Выделить все",DOM_SELECTALL*)
+         MENUITEM SEPARATOR
+	 MENUITEM "Обновить",DOM_REFRESH
+	 POPUP "Вставить объект"
+	 {
+	  MENUITEM "Формула",DOM_ECUAT
+	  MENUITEM "Рисунок",DOM_BMP
+	 }
+
+   }	
+}

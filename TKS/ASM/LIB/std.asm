@@ -1,0 +1,163 @@
+;       модуль с процедурами файлового ввода вывода
+;	(c) Copyright 2002 by Sokolov Artem
+;	дата создания:     07.12.02
+
+.model small,pascal
+.data
+	params	dw	0
+	com	dd	?
+		dd	?
+		dd	?
+	keep_ss	dw	0
+	keep_sp	dw	0
+	keep_ds	dw	0
+        path	db	'*.*',0	;шаблон для поиска
+.386
+.code
+	extrn EndProg:proc,IsAlpha:proc
+
+PUBLIC Exec,InitExe,FreeMem,GetMem,GetCurDrive,SetCurDir,GetCurDir,CopyFiles  
+
+Exec:					;DI-командная строка
+	push di				;сохранили смещение имени файла
+	mov al,0			;теперь надо найти смещение ком.строки
+	push ds
+	pop es
+	mov cx,63
+	cld
+	repne scasb			;ищем начало имени запускаемого файла
+	push di
+	pop si				;SI-командная строка 
+	pop di				;DI-имя запускаемого файла
+	mov keep_ds,ds			;сохраняем DS вызывающей проги
+	mov ax,@data
+	mov ds,ax
+	mov word ptr com,offset si
+	mov word ptr com+2,seg si
+	mov ax,seg params
+	mov es,ax
+	mov bx,offset params
+	mov keep_ss,ss
+	mov keep_sp,sp
+	mov dx,offset di
+	mov ax,seg di
+	mov ds,ax
+	mov ah,4bh
+	mov al,0
+	int 21h
+	mov ss,keep_ss
+	mov sp,keep_sp
+	mov ds,keep_ds
+	ret
+
+InitExe:
+	mov ax,@data
+	mov ds,ax
+	call far ptr EndProg
+	mov bx,es
+	sub bx,ax
+	neg bx
+	mov ah,4ah
+	int 21h	
+	ret
+
+FreeMem:			;ES-сегмент освобождаемого блока памяти
+	mov ah,49h
+	int 21h
+	ret
+
+GetMem:				;в BX - число требуемых параграфов
+	mov ah,48h
+  	int 21h
+  	ret
+
+GetCurDrive:			;накопительпо умолчанию в AL номер (0-A,2-C...)
+	mov ah,19h
+	int 21h
+	ret
+
+SetCurDir:			;DS:DX-путь к строке с каталогом
+	mov ah,3bh
+	int 21h
+	ret
+
+GetCurDir:			;DS:SI-буфер 64 байта
+	push si
+	call GetCurDrive
+	add al,41h		;преобразуем в букву
+	mov [si],al
+	mov byte ptr [si+1],':'
+	mov byte ptr [si+2],'\'
+	add si,3
+	mov ah,47h
+	mov dl,0		;0-по умолчанию( 1-A,2-B,3-C и т.д)
+	int 21h
+	pop si
+	ret
+
+CanICopy:				;возвращает CF=1 если копировать нельзя
+	cmp byte ptr es:[0095h],10h	;байт атрибутов в DTA
+	sete al				;если это каталог,AL=1
+	cmp bx,2			;это первый проход?(di = 3)
+	sete ah				;если да-AL = 1
+	add al,ah                       ;копировать можно,если AL=0 или 2
+	cmp al,1			
+	je short CIC100			;копировать нельзя!!!
+	clc
+	ret
+CIC100:	stc
+	ret	
+
+CopyFiles:			;копирует все файлы текущего в FS:000E
+	;на первом проходе копирует все каталоги,на втором-файлы
+	push dx bx si di 
+	mov di,14			;смещение в этом буфере
+	mov ah,2FH
+	int 21h                 	;получить текущюю DTA  ES:BX
+	mov bx,2			;сканировать за два прохода(не 3!!!)
+CF100:					;главный цикл	
+	mov ah,4eH
+	lea dx,path
+	int 21h  			;ищем первый файл
+	jc short CF400			;не нашли
+	call CanICopy
+	jc short CF500			;в этом проходе копировать нельзя
+	xor bp,bp  			;счетчик файлов
+	mov si,9Eh			;SI-смещение имени файла в DTA
+CF200:
+	inc bp					;
+CF300:	lods byte ptr es:[si]
+	cmp al,2Eh
+	jne short CF360
+	cmp di,14				;DI-на начало буфера в FS ?	
+	jne short CF360
+	cmp byte ptr es:[si],2Eh
+	je short CF360				;это вторая точка-оставить
+	dec bp
+	jmp short CF500				;это первая точка-пропустить
+CF360:
+	cmp byte ptr es:[0095h],10h		;это каталог?
+	je short CF400				;регистр каталога не менять
+	call IsAlpha
+	jnc short CF400				;это не буква
+	add al,20h
+CF400:	mov byte ptr fs:[di],al
+	inc di
+	or al,al
+	jne short CF300
+CF500:
+	lea dx,path 
+	mov ah,4fh
+	int 21h					;искать следующий файл
+	mov si,9Eh				;BX-смещение имени файла в DTA
+	jc short CF600
+	call CanICopy
+	jc short CF500
+	jmp short CF200
+CF600:
+	dec bx					;счетчик проходов
+	jnz short CF100				;это был первый проход
+	mov word ptr fs:[0012],bp		;количество файлов
+	pop di si bx dx
+	ret
+end 

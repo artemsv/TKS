@@ -1,0 +1,102 @@
+1 CLS
+GOSUB 10
+GOSUB 20
+LOCATE 5, 35: PRINT "М Е Н Ю"
+GOSUB 30
+LOCATE 9, 25: PRINT "1. Нахождения силы тока"
+GOSUB 40
+LOCATE 11, 25: PRINT "2. Закон Ома для участка цепи"
+GOSUB 50
+LOCATE 13, 25: PRINT "3. Расчёт удельного сопротивления проводника"
+GOSUB 60
+LOCATE 15, 25: PRINT "4. Выход"
+LOCATE 17, 25: PRINT TAB(25); : INPUT K
+IF K = 1 THEN 5
+IF K = 2 THEN 6
+IF K = 3 THEN 7
+IF K = 4 THEN END
+5 CLS
+GOSUB 8
+8 SCREEN 2
+LINE (1, 1)-(630, 180), , B
+LOCATE 4, 2: PRINT "Введите электрический заряд q"
+LOCATE 5, 2: PRINT TAB(2); : INPUT q
+LOCATE 6, 2: PRINT "Введите время t"
+LOCATE 7, 2: PRINT TAB(2); : INPUT t
+LOCATE 9, 2: PRINT TAB(2); : I = q / t
+PRINT "I="; I
+LOCATE 11, 5: PRINT "Нажмите любую цифру, а потом Enter"
+LOCATE 13, 2: PRINT TAB(2); : INPUT f
+GOTO 1
+RETURN
+6 CLS
+SCREEN 2
+LINE (1, 1)-(630, 180), , B
+LOCATE 2, 2: PRINT "Введите напряжение U"
+LOCATE 3, 2: PRINT TAB(2); : INPUT U
+LOCATE 4, 2: PRINT "Введите сопротивление R"
+LOCATE 5, 2: PRINT TAB(2); : INPUT R
+LOCATE 7, 2: PRINT TAB(2); : I = U / R
+PRINT "I="; I
+LOCATE 10, 5: PRINT "Нажмите любую цифру, а потом Enter"
+LOCATE 12, 2: PRINT TAB(2); : INPUT O
+GOTO 1
+7 CLS
+LINE (1, 1)-(630, 180), , B
+LOCATE 2, 2: PRINT "Удельное сопротивление p"
+LOCATE 3, 2: PRINT TAB(2); : INPUT p
+LOCATE 4, 2: PRINT "Длина l"
+LOCATE 5, 2: PRINT TAB(2); : INPUT l
+LOCATE 5, 2: PRINT "Площадь поперечного сечения s"
+LOCATE 6, 2: PRINT TAB(2); : INPUT s
+LOCATE 8, 2: PRINT TAB(2); : R = p * (l / s)
+PRINT "R="; R
+LOCATE 10, 5: PRINT "Нажмите любую цифру, а потом Enter"
+LOCATE 12, 2: PRINT TAB(2); : INPUT t
+GOTO 1
+10 SCREEN 2
+FOR Z = 1 TO 680 STEP 1
+CIRCLE (Z, 3), 10
+NEXT Z
+FOR X = 1 TO 680 STEP 1
+CIRCLE (X, 180), 10
+NEXT X
+FOR C = 1 TO 180 STEP 1
+CIRCLE (5, C), 8
+NEXT C
+FOR V = 1 TO 180 STEP 1
+CIRCLE (630, V), 9
+NEXT V
+RETURN
+20 FOR B = 29 TO 600 STEP 1
+CIRCLE (B, 35), 15, 7
+CIRCLE (B, 35), 15, 0
+NEXT B
+RETURN
+30 FOR N = 40 TO 500 STEP 1
+CIRCLE (N, 68), 10, 7
+CIRCLE (N, 68), 10, 0
+NEXT N
+RETURN
+40 FOR M = 40 TO 500 STEP 1
+CIRCLE (M, 83), 10, 7
+CIRCLE (M, 83), 10, 0
+NEXT M
+RETURN
+50 FOR J = 40 TO 600 STEP 1
+CIRCLE (J, 98), 10, 7
+CIRCLE (J, 98), 10, 0
+NEXT J
+RETURN
+60 FOR H = 40 TO 400 STEP 1
+CIRCLE (H, 115), 10, 7
+CIRCLE (H, 115), 10, 0
+NEXT H
+RETURN
+
+
+
+
+
+
+

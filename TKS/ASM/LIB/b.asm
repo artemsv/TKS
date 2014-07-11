@@ -1,0 +1,281 @@
+;b.asm - модуль процедур для работы со строками		03.01.03.
+.model small
+.386
+
+extrn GetStart:proc,X:byte,Y:byte,firstLine:word,curPtr:word
+extrn buffer:word,bufSize:word,Flag:word,margin:word
+
+.code
+
+PUBLIC NextLine,LineStart,LineEnd,OutStr,CharFromPos,InsertText,BufR,BufL,Move
+PUBLIC NextChar,PrevChar,PosFromChar,IsSpacer,IsAlpha,GetCurY,Len,ParseStr
+
+GetCurY:				;возвращает номер текущей строки
+	xor si,si
+	xor ax,ax
+GCY100:	cmp si,curPtr
+	je short GCY300
+	cmp si,bufSize
+	je short GCY300
+	cmp byte ptr gs:[si],13
+	jne short GCY200
+	inc ax
+GCY200:	inc si
+	jmp short GCY100
+GCY300: inc ax
+	ret
+	
+Len:					;возвращает длину строки в SI
+	push si
+	xor cx,cx
+L100:	cmp byte ptr [si],13
+	je short L200
+	cmp byte ptr [si],0
+	je short L200
+	inc si
+	inc cx
+	jmp short L100
+L200:	pop si
+	ret
+
+IsAlpha:				;если в AL буква,устанавливает CF
+	cmp al,41h			;'A'
+	jb short IS200
+	cmp al,5Ah                      ;'Z'
+	jbe short IS100
+	cmp al,7AH			;'z'
+	ja short IS200
+	cmp al,61h                      ;'a'
+	jae short IS100
+	jmp short IS200	
+
+IsSpacer:				;если в Al печатный символ,уст-ет CF
+	cmp al,13
+	jna short IS200
+	cmp al,32
+	je IS200
+IS100:	stc
+	jmp IS300
+IS200:	clc
+IS300:	ret
+
+InsertText:                             ;вставляет символ в AL в буфер
+	mov si,curPtr
+	cmp byte ptr gs:[si],13
+	je short IT100                  ;тек.символ=#13-сдвигать обязательно
+	bt flag,0			;установлен ли бит вставки?		
+	jc short IT200			;не установлен
+IT100:	call BufR
+IT200:	mov byte ptr gs:[si],al
+	inc curPtr
+	mov si,curPtr			;не стал ли curPtr больше bufSize?
+	cmp si,bufSize			;такое может быть в режиме Overrite
+	jbe short IT300
+	mov bufSize,si			;стал-корректируем
+IT300:
+	ret
+
+NextChar:				;возвр.смещ.след.символа в буфере
+	mov si,curPtr
+	cmp si,bufSize			;не последний ли символ буфера?
+	jae short NC400			;последний	
+NC100:	cmp word ptr gs:[si],0A0DH
+	je short NC200
+	inc si				;увеличиваем текущую позицию в буфере
+	jmp short NC300
+NC200:	add si,2			;пропуск #13#10
+NC300:	mov curPtr,si			;закрепляем изменения текущей позиции
+NC400:	ret
+	
+PrevChar:	        		;возвр.предыдущий символ в буфере
+	mov si,curPtr
+	or si,si
+	je short PC200			;это первый символ первой строки
+	dec si
+	je short PC100			;странно,но без этого след.ком.-вешает
+	cmp word ptr gs:[si-1],0A0DH
+	jne short PC100
+	dec si
+PC100:	mov curPtr,si
+PC200:	ret
+
+CharFromPos:				;возвращает (SI) тек.позицию в буфере
+	xor bx,bx                 	;настраивает curPtr на X,Y
+	xor ax,ax
+	mov al,Y
+	sub al,2			;AX-нормализованный Y
+	mov bl,X
+	dec bl				;BX-нормализованный X
+	mov cx,firstLine
+	add cx,ax			;AX-столько строк надо пропустить
+	mov curPtr,0
+CFP100:
+	jcxz CFP200
+	call NextLine
+	inc si
+	loop CFP100
+CFP200:
+	add si,bx
+	mov curPtr,si	
+	ret
+	
+PosFromChar:				;обновляет значения curY,curX в соотв.
+					;с текущими curPtr 
+	mov cx,curPtr                   ;столько символов от начала до текущей
+	xor si,si
+	xor dx,dx			;счётчик строк
+PFC100: 				;цикл подсчёта строк
+	cmp byte ptr gs:[si],13
+	jne short PFC200
+	inc dx				;нашли строку!!!
+PFC200:
+	inc si				;двигаемся от начала буфера к curPtr
+	jcxz PFC300			;а вдруг curPtr уже равен 0?
+	dec cx
+	jcxz PFC300			;просмотрели весь буфер от curPtr до 0
+	jmp short PFC100
+PFC300:
+	mov bx,firstLine
+	sub dx,bx			;нормализованный Y в DX
+	add dx,2			;эффективный Y в DX
+	mov Y,dl			;эффективный Y в DL
+	;теперь надо найти X.Будем просматривать строку от её начала до тек.
+	mov X,1				;инициализация-в начале строки
+	mov si,curPtr
+	call LineStart
+	cmp si,curPtr			;текущая позиция-первая в строке?
+	je short PFC600			;да-X уже равен 1-выход
+
+PFC350:
+	cmp byte ptr gs:[si],9
+	jne short PFC360
+	or X,7
+	jmp short PFC360
+PFC360:
+	inc si
+	inc X
+	cmp si,curPtr
+	jne short PFC350	
+PFC600:	ret
+
+OutStr:			;выводит строку на экран,BP-макс.позиция в буфере
+	push es di cx                   ;DX-координаты,SI-строка источник
+	mov cx,78      
+	call GetStart			;настр.DI на позицию в видеобуфере
+	mov ax,di
+	add ax,cx
+	sub ax,2
+	add ax,cx			;AX-макс.поз. в видеобуф.для этой строки
+OS100:                                  ;цикл вывода строки на экран
+	cmp si,bp
+	jae short OS400
+	cmp byte ptr [si],13
+	je short OS400
+	cmp byte ptr [si],9
+	jne short OS200
+	or di,14
+	add di,2
+	inc si
+	jmp short OS300
+OS200:
+	movsb
+	inc di			;пропускаем байт атрибутов
+OS300:
+	cmp di,ax
+	ja short OS350 
+	loop OS100
+	jcxz OS350		;значит строка длиннее 78 символов
+	jmp short OS400		;смогли вывести всю строку
+OS350:				;пропускаем оставшиеся символы до конца строки
+	cmp byte ptr [si],13
+	je short OS400
+	inc si
+	jmp short OS350
+OS400:
+	pop cx di es
+	ret		
+
+NextLine:
+	mov si,curPtr
+	call LineEnd
+	mov curPtr,si
+	jmp NextChar
+
+LineStart:                      	;in: GS:SI-указатель 
+LS100:					;out SI-начало текущей строки
+	or si,si
+	je short LS200			;тек.поз.-первый символ буфера
+	cmp byte ptr gs:[si-1],10
+	je short LS200			;достигли начала строки
+	dec si
+	jmp LS100
+LS200:	ret
+
+LineEnd:				;in: GS:SI-указатель 
+LE100:					;out SI-конец текущей строки
+	cmp si,bufSize
+	jae short LE300			;достигли конца буфера
+	cmp byte ptr gs:[si],13
+	je short LE300		        ;достигли конца строки
+	inc si
+	jmp LE100
+LE300:	ret
+
+BufL:                                	;сдвинуть буфер на один байт влево
+	mov cx,bufSize
+	sub cx,si
+	push si                     	;SI-адрес буфера,CX-длина буфера
+	pop di
+	inc si
+	call Move
+	dec bufSize
+	ret
+BufR:                                   ;сдвинуть буфер на один байт вправо
+	mov cx,bufSize
+	sub cx,si
+	push si                         ;SI-адрес буфера,CX-длина буфера
+	pop di
+	inc di
+	call Move
+	inc bufSize
+	ret
+
+Move :                                  ;сдвинуть CX байт с SI в DI
+	push ax cx di si ds es          ;SI-адрес буфера,CX-длина буфера
+	cmp di,si
+	jb short M100
+	add si,cx
+	add di,cx
+	std     
+	dec si
+	dec di
+	jmp short M200
+M100:	cld
+M200:	mov ax,gs                   	;сегмент буфера редактирования
+	mov es,ax                       ;сегмент приемника-буфер ред-я
+	mov ds,ax                       ;сегмент источника-буфер ред-я
+	rep movsb
+M300:	pop es ds si di cx ax           
+	ret
+
+ParseStr:       		;SI-ASCIIZ строка;символы концов подстрок - #13
+	push si
+	xor bl,bl		;возвр. в BL-длину макс.подстроки,CH-их кол-во
+	xor cx,cx		;
+	mov al,0		;символ для поиска
+PS100:			;цикл подсчёта длины макс.строки (BL) и их кол-ва (CH)
+	cmp byte ptr [si],13
+	jne short PS200
+	inc ch			;счётчик строк
+	cmp bl,cl		;сравниваем с длиной макс.строки до этой
+	jae short PS200		;найденная строка не больше максимальной в BL
+	mov bl,cl		;уст. нового значения в качестве макс. строки
+	xor cl,cl
+PS200:	cmp byte ptr [si],0
+	je short PS300
+	inc cl
+	inc si
+	jmp short PS100
+PS300:	pop si
+	ret
+end

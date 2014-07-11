@@ -1,0 +1,148 @@
+	mov al,X 			;AL-желаемая позиция по X нижней строки
+D100:	inc si
+	mov curPtr,si
+	call PosFromChar
+	cmp byte ptr gs:[si],13
+	je short D200			;достигли конца строки-выход
+	cmp si,bufSize
+	je short D200			;достигли конца буфера-выход
+	cmp al,X
+	ja short D100
+	jmp short D200
+D200:	cmp Y,23
+	jb short D230
+	inc firstLine
+	jmp short D250
+D230:	cmp Y,1
+	ja short D300
+	dec firstLine
+D250:	call PosFromChar
+	stc
+D300:	ret
+
+Up:	mov si,curPtr
+	call LineStart
+	or si,si
+	je short D200			;первый символ в буфере-первая строка
+	dec si
+	call LineStart	
+	dec si
+	jmp short D050
+	
+	
+Delete:	mov si,curPtr
+	cmp byte ptr gs:[si],13
+	jne DL100
+	call BufL
+	dec si
+DL100:	call BufL
+	ret
+
+Back:	mov si,curPtr
+	or si,si
+	je short B200
+	call Minus
+	call Delete
+B200:	ret
+
+Home:	mov si,curPtr
+	call LineStart
+H100:	mov curPtr,si
+	call PosFromChar
+	ret
+
+GoEnd:	mov si,curPtr
+	call LineEnd
+	jmp short H100
+
+PgUp:	cmp firstLine,23
+	jnb short PU100
+	mov firstLine,0
+	jmp short PU200
+PU100:	sub firstLine,23
+PU200:	ret
+
+PgDown: call CountLines
+	mov ax,firstLine
+	add ax,22
+	cmp dx,ax                    ;не больше ли общего кол-ва строк?
+	jb short PD100
+	mov firstLine,ax
+PD100:	call CharFromPos
+	ret
+
+CtrlY:	mov si,curPtr
+	call LineStart
+	mov curPtr,si
+CY100:	cmp byte ptr gs:[si],13
+	je short CY200
+	cmp si,bufSize
+	jae short CY300
+	call Delete
+	jmp short CY100
+CY200:	call Delete				;#13
+	call Delete                             ;#10
+CY300:	ret
+
+CtrlT:	mov si,curPtr
+	push ds ds gs
+	pop ds fs
+CT100:	cmp si,fs:bufSize
+	je short CT300
+	lodsb
+	call IsSpacer
+	jnc short CT200				;это #32,#13,#10,#9
+	pop ds	
+	call Delete
+	push ds
+	jmp short CT100
+CT200:
+	cmp si,fs:bufSize
+	je short CT300
+	lodsb
+	call IsSpacer
+	jc short CT300 				;это печатный символ
+	pop ds
+	call Delete
+	push ds
+	jmp short CT200
+CT300:	pop ds
+	ret
+
+CtrlR:	ret
+
+CtrlRight:				;переход в начало следующего слова
+	mov si,curPtr
+	mov dx,bufSize
+	push ds gs
+	pop ds 
+CR100:                			;цикл пропуска до #32 или #9
+	lodsb
+	call IsSpacer			;CF=1 если печатный символ
+	jnc short CR200
+	cmp si,dx	
+	jnae short CR100
+CR200:
+	cmp si,dx
+	jae short CR300
+	lodsb
+	call IsSpacer
+	jnc short CR200
+CR300:
+	pop ds
+	dec si
+	mov curPtr,si
+	call PosFromChar
+	ret
+
+CtrlDel:				;очищает от курсора до конца строки
+	mov si,curPtr
+CD100:	cmp byte ptr gs:[si],13
+	je short CD200	
+	cmp si,bufSize
+	je short CD200
+	call Delete
+	dec si
+	jmp short CD100
+CD200:	ret
+end

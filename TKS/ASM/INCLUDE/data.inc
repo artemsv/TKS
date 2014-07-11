@@ -1,0 +1,10 @@
+        invite1 db 'Введите строку для поиска(до 20 символов):',0aH,0DH,'$'
+	invite2 db 'Ввелите символ для поиска:',0aH,0DH,'$'
+	CR	db 0aH,0DH,'$'
+	chr     db 0
+	string  db '                 ',0aH,0DH,'$'	
+	srch_st db '1234567890ABCDEFGH1234567890ABCDEFGH',0aH,0DH,'$'
+	about1  db 'TurboTest ',0AH,0DH,'$'
+	about2  db 'Version 6.0',0AH,0DH,'$'
+	fnd_msg db 'Найден в позиции:  ',0AH,0DH,'$'
+	n_msg   db 'Не найден!!!',0AH,0DH,'$'

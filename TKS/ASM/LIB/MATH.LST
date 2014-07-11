@@ -1,0 +1,134 @@
+Turbo Assembler	 Version 4.1	    04/09/96 14:14:22	    Page 1
+math.ASM
+
+
+
+      1	    0000			 .model	small			 ;модуль математических	процедур  16.01.03.
+      2					 .586
+      3	    0000			 .code
+      4
+      5					 PUBLIC	Val
+      6
+      7	    0000			 Val:			 ;Преобразует число в EAX в строку в SI,CX - кол-во цифр
+      8	    0000  66| 52 66| 53	1E 56		 push edx ebx ds si
+      9	    0006  5F 07				 pop di	es
+     10	    0008  66| 3D 000186A0		 cmp eax,100000
+     11	    000E  72 21				 jb short V10
+     12	    0010  66| BA 00000000		 mov edx,0
+     13	    0016  66| BB 000186A0		 mov ebx,100000
+     14	    001C  66| F7 F3			 div ebx			 ;EDX-остаток,EAX-частное
+     15	    001F  04 30				 add al,30h
+     16	    0021  AA				 stosb
+     17	    0022  66| 8B C2			 mov eax,edx
+     18	    0025  66| 25 0000FFFF		 and eax,0000FFFFh
+     19	    002B  66| C1 EA 10			 shr edx,16
+     20	    002F  EB 07				 jmp short V20
+     21	    0031  66| 8B D0		 V10:	 mov edx,eax
+     22	    0034  66| C1 EA 10			 shr edx,16
+     23	    0038  3D 2710		 V20:	 cmp ax,10000
+     24	    003B  72 0C				 jb short V100
+     25	    003D  BB 2710			 mov bx,10000
+     26	    0040  F7 F3				 div bx				 ;AL-число десятков тысяч
+     27	    0042  04 30				 add al,30h
+     28	    0044  AA				 stosb
+     29	    0045  8B C2				 mov ax,dx			 ;помещаем остаток
+     30	    0047  EB 08				 jmp short V200
+     31	    0049  3B F7			 V100:	 cmp si,di
+     32	    004B  74 04				 je short V200
+     33	    004D  C6 05	30			 mov byte ptr [di],30h
+     34	    0050  47				 inc di
+     35	    0051  3D 03E8		 V200:	 cmp ax,1000
+     36	    0054  72 0F				 jb short V300
+     37	    0056  BA 0000			 mov dx,0
+     38	    0059  BB 03E8			 mov bx,1000
+     39	    005C  F7 F3				 div bx
+     40	    005E  04 30				 add al,30h
+     41	    0060  AA				 stosb
+     42	    0061  8B C2				 mov ax,dx			 ;помещаем остаток
+     43	    0063  EB 08				 jmp short V400
+     44	    0065  3B F7			 V300:	 cmp si,di
+     45	    0067  74 04				 je short V400
+     46	    0069  C6 05	30			 mov byte ptr [di],30h
+     47	    006C  47				 inc di
+     48	    006D  3D 0064		 V400:	 cmp ax,100
+     49	    0070  72 0D				 jb short V500
+     50	    0072  B3 64				 mov bl,100
+     51	    0074  F6 F3				 div bl
+     52	    0076  04 30				 add al,30h
+     53	    0078  AA				 stosb
+     54	    0079  8A C4				 mov al,ah			 ;помещаем остаток
+     55	    007B  32 E4				 xor ah,ah
+     56	    007D  EB 08				 jmp short V600
+     57	    007F  3B F7			 V500:	 cmp si,di
+Turbo Assembler	 Version 4.1	    04/09/96 14:14:22	    Page 2
+math.ASM
+
+
+
+     58	    0081  74 04				 je short V600
+     59	    0083  C6 05	30			 mov byte ptr [di],30h
+     60	    0086  47				 inc di
+     61	    0087  3C 0A			 V600:	 cmp al,10
+     62	    0089  72 0E				 jb short V700
+     63	    008B  B3 0A				 mov bl,10
+     64	    008D  F6 F3				 div bl
+     65	    008F  04 30				 add al,30h
+     66	    0091  AA				 stosb
+     67	    0092  8A C4				 mov al,ah
+     68	    0094  04 30				 add al,30h
+     69	    0096  AA				 stosb
+     70	    0097  EB 0B				 jmp short V800
+     71	    0099  3B F7			 V700:	 cmp si,di
+     72	    009B  74 04				 je short V780
+     73	    009D  C6 05	30			 mov byte ptr [di],30h
+     74	    00A0  47				 inc di
+     75	    00A1  04 30			 V780:	 add al,30h
+     76	    00A3  AA				 stosb
+     77	    00A4  8B CF			 V800:	 mov cx,di
+     78	    00A6  2B CE				 sub cx,si
+     79	    00A8  66| 5B 66| 5A			 pop ebx edx
+     80	    00AC  C3				 ret
+     81					 end
+Turbo Assembler	 Version 4.1	    04/09/96 14:14:22	    Page 3
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "04/09/96"
+??FILENAME			  Text	 "math	  "
+??TIME				  Text	 "14:14:22"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0000H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 MATH
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+V10				  Near	 _TEXT:0031
+V100				  Near	 _TEXT:0049
+V20				  Near	 _TEXT:0038
+V200				  Near	 _TEXT:0051
+V300				  Near	 _TEXT:0065
+V400				  Near	 _TEXT:006D
+V500				  Near	 _TEXT:007F
+V600				  Near	 _TEXT:0087
+V700				  Near	 _TEXT:0099
+V780				  Near	 _TEXT:00A1
+V800				  Near	 _TEXT:00A4
+VAL				  Near	 _TEXT:0000
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+_TEXT				  16  00AD Word	  Public  CODE
+

@@ -1,0 +1,56 @@
+Turbo Assembler	 Version 4.1	    01/05/97 11:58:24	    Page 1
+p.ASM
+
+
+
+      1	0000			     .model tiny
+      2	0000			     .code
+      3				     .startup
+1     4	0100			     @Startup:
+      5	0100  E9 0401			     jmp start
+      6	0103  8D A0 E1 E2 AE EF	E9+	     msg db 'Настоящяя программа!!!',13,10,'$'
+      7	      EF EF 20 AF E0 AE	A3+
+      8	      E0 A0 AC AC A0 21	21+
+      9	      21 0D 0A 24
+     10	011C  03E8*(41)			     db	1000 dup(65)
+     11	0504			     start:
+     12	0504  BA 0103r			     lea dx,msg
+     13	0507  B4 09			     mov ah,9
+     14	0509  CD 21			     int 21h
+     15	050B  B4 4C			     mov ah,4ch
+     16	050D  CD 21			     int 21h
+     17				     end
+Turbo Assembler	 Version 4.1	    01/05/97 11:58:24	    Page 2
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "01/05/97"
+??FILENAME			  Text	 "p	  "
+??TIME				  Text	 "11:58:24"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 DGROUP
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 P
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 1
+@STACK				  Text	 DGROUP
+@STARTUP			  Near	 DGROUP:0100
+@WORDSIZE			  Text	 2
+MSG				  Byte	 DGROUP:0103
+START				  Near	 DGROUP:0504
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+  _TEXT				  16  050F Word	  Public  CODE
+

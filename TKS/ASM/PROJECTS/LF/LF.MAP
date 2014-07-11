@@ -1,0 +1,11 @@
+
+ Start  Stop   Length Name               Class
+
+ 00000H 012FBH 012FCH _TEXT              CODE
+ 012FCH 012FCH 00000H _DATA              DATA
+
+Error: Undefined symbol WRITELN in module LF.ASM
+Error: Undefined symbol READLN in module LF.ASM
+Error: Undefined symbol FILEOPEN in module LF.ASM
+Error: Undefined symbol FILEREAD in module LF.ASM
+

@@ -1,0 +1,9 @@
+
+702 MENU DISCARDABLE 
+{	
+POPUP ""                    
+  {	
+         MENUITEM "Правильный ответ-1",10001
+
+   }	
+}

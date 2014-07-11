@@ -1,0 +1,271 @@
+Turbo Assembler	 Version 4.1	    01/05/97 11:45:34	    Page 1
+d:\asm\projects\wd\wd.ASM
+
+
+
+      1	    0000			 .model	 tiny
+      2					 .586
+      3					 extrn fileread:proc,fileopen:proc,readln:proc,writeln:proc,filewrite:proc
+      4					 extrn keypressed:proc,filecreate:proc,fileclose:proc,FileSize:proc
+      5	    0000			 .code
+      6					 .startup
+1     7	    0100			 @Startup:
+      8	    0100  E9 01A6		      jmp EndData
+      9	    0103  80 81	82 83 84 85 85+	      dos	  db 'АБВГДЕЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеежзийклмнопрстуфхцчшщъыьэюя'
+     10		  86 87	88 89 8A 8B 8C+
+     11		  8D 8E	8F 90 91 92 93+
+     12		  94 95	96 97 98 99 9A+
+     13		  9B 9C	9D 9E 9F A0 A1+
+     14		  A2 A3	A4 A5 A5 A6 A7+
+     15		  A8 A9	AA AB AC AD AE+
+     16		  AF E0	E1 E2 E3 E4 E5+
+     17		  E6 E7	E8 E9 EA EB EC+
+     18		  ED EE	EF
+     19	    0145  C0 C1	C2 C3 C4 C5 A8+	      win	  db '└┴┬├─┼и╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀рстуфх╕цчшщъыьэюяЁёЄєЇїЎў°∙·√№¤■ '
+     20		  C6 C7	C8 C9 CA CB CC+
+     21		  CD CE	CF D0 D1 D2 D3+
+     22		  D4 D5	D6 D7 D8 D9 DA+
+     23		  DB DC	DD DE DF E0 E1+
+     24		  E2 E3	E4 E5 B8 E6 E7+
+     25		  E8 E9	EA EB EC ED EE+
+     26		  EF F0	F1 F2 F3 F4 F5+
+     27		  F6 F7	F8 F9 FA FB FC+
+     28		  FD FE	FF
+     29	    0187  0D 0A	8A AE AD A2 A5+	      msg1	  db 13,10,'Конвертер текстовых	файлов ANSI и ASCII',13,10
+     30		  E0 E2	A5 E0 20 E2 A5+
+     31		  AA E1	E2 AE A2 EB E5+
+     32		  20 E4	A0 A9 AB AE A2+
+     33		  20 41	4E 53 49 20 A8+
+     34		  20 41	53 43 49 49 0D+
+     35		  0A
+     36	    01B2  56 65	72 73 69 6F 6E+			  db 'Version 1.2 (c) Copyright	2002 by	Sokol Software ',13,10,10,'$'
+     37		  20 31	2E 32 20 28 63+
+     38		  29 20	43 6F 70 79 72+
+     39		  69 67	68 74 20 32 30+
+     40		  30 32	20 62 79 20 53+
+     41		  6F 6B	6F 6C 20 53 6F+
+     42		  66 74	77 61 72 65 20+
+     43		  0D 0A	0A 24
+     44	    01E7  82 A2	A5 A4 A8 E2 A5+	      msg2	  db 'Введите 1,если ANSI в ASCII и 2,если ASCII в ANSI	(q-выход)',13,10,'$'
+     45		  20 31	2C A5 E1 AB A8+
+     46		  20 41	4E 53 49 20 A2+
+     47		  20 41	53 43 49 49 20+
+     48		  A8 20	32 2C A5 E1 AB+
+     49		  A8 20	41 53 43 49 49+
+     50		  09 A2	20 41 4E 53 49+
+     51		  20 28	71 2D A2 EB E5+
+     52		  AE A4	29 0D 0A 24
+     53	    0225  82 A2	A5 A4 A8 E2 A5+	      msg3	  db 'Введите имя исходного файла:',13,10,'$'
+     54		  20 A8	AC EF 20 A8 E1+
+     55		  E5 AE	A4 AD AE A3 AE+
+     56		  20 E4	A0 A9 AB A0 3A+
+     57		  0D 0A	24
+Turbo Assembler	 Version 4.1	    01/05/97 11:45:34	    Page 2
+d:\asm\projects\wd\wd.ASM
+
+
+
+     58	    0244  8E E8	A8 A1 AA A0 20+	      msg5	  db 'Ошибка доступа к файлу',13,10,'$'
+     59		  A4 AE	E1 E2 E3 AF A0+
+     60		  20 AA	20 E4 A0 A9 AB+
+     61		  E3 0D	0A 24
+     62	    025D  3F*(03)		      file	  db 63	dup(3)
+     63	    029C  ??			      buf	  db ?
+     64	    029D  0103r			      old	  dw dos
+     65	    029F  0145r			      new	  dw win
+     66	    02A1  ????????		      len	  dd ?
+     67	    02A5  ????			      h1	  dw ?
+     68	    02A7  ????			      h2	  dw ?
+     69	    02A9			 EndData:
+     70	    02A9  BA 0187r		   lea dx,msg1
+     71	    02AC  E8 0000e		   call	 writeln
+     72	    02AF  BA 01E7r		   lea dx,msg2
+     73	    02B2  E8 0000e		   call	 writeln
+     74	    02B5			 get_char:		  ;цикл	опроса клавиатуры
+     75	    02B5  E8 0000e		   call	 keypressed	  ;получить символ из буфера
+     76	    02B8  74 FB			   jz get_char		  ;символ не введен
+     77	    02BA  3C 31			   cmp al,'1'
+     78	    02BC  74 16	90 90		   je one		  ;введен символ '1'
+     79	    02C0  3C 32			   cmp al,'2'
+     80	    02C2  74 1F	90 90		   je two		  ;введен символ '2'
+     81	    02C6  3C 71			   cmp al,'q'
+     82	    02C8  0F 84	00F4		   je quit		  ;введен символ 'q'
+     83	    02CC  3C 51			   cmp al,'Q'
+     84	    02CE  0F 84	00EE		   je quit		  ;введен символ 'Q'
+     85	    02D2  EB E1			   jmp get_char
+     86	    02D4			 one:
+     87	    02D4  B8 0145r		   mov ax,offset win
+     88	    02D7  A3 029Dr		   mov old,ax
+     89	    02DA  B8 0103r		   mov ax,offset dos
+     90	    02DD  A3 029Fr		   mov new,ax
+     91	    02E0  EB 0D	90		   jmp begin
+     92	    02E3			 two:
+     93	    02E3  B8 0103r		   mov ax,offset dos
+     94	    02E6  A3 029Dr		   mov old,ax
+     95	    02E9  B8 0145r		   mov ax,offset win
+     96	    02EC  A3 029Fr		   mov new,ax
+     97	    02EF			 begin:
+     98	    02EF  BA 0225r		   lea dx,msg3		  ;
+     99	    02F2  E8 0000e		   call	 writeln	  ;вывели приглашение ко вводу
+    100	    02F5  BA 025Dr		   lea dx,file		  ;смещение буфера ввода
+    101	    02F8  B9 003F		   mov cx,63		  ;длина буфера	ввода
+    102	    02FB  E8 0000e		   call	 readln		  ;ввели имя исходного файла
+    103	    02FE  83 FE	00		   cmp si,0		  ;в SI	- длина	строки
+    104	    0301  0F 84	00BB		   jz quit		  ;если	ввели пустую строку
+    105	    0305  C6 84	025Dr 00	   mov file[si],0	  ;ограничивает	имя файла
+    106	    030A  B0 00			   mov al,0		  ;атрибут открываемого	файла
+    107	    030C  BA 025Dr		   mov dx,offset file	  ;смещение имени файла
+    108	    030F  E8 0000e		   call	 FileOpen
+    109	    0312  0F 82	00AA		   jc quit
+    110	    0316  A3 02A5r		   mov h1,ax		  ;сохраняем дескриптор	исходного файла
+    111	    0319  8B D8			   mov bx,ax		  ;дескриптор файла
+    112	    031B  E8 0000e		   call	 FileSize	  ;в DX:AX - размер файла
+    113	    031E  89 16	02A1r		   mov word ptr	len,dx		  ;запомнили длину файла
+    114	    0322  66| C1 26 02A1r 10	   shl len,16
+Turbo Assembler	 Version 4.1	    01/05/97 11:45:34	    Page 3
+d:\asm\projects\wd\wd.ASM
+
+
+
+    115	    0328  66| 81 26 02A1r     +	   and len,0FFFF0000h
+    116		  FFFF0000
+    117	    0331  01 06	02A1r		   add word ptr	len,ax
+    118	    0335  C6 84	025Br 7E	   mov file[si-2],'~'	  ;формируем имя нового	файла
+    119	    033A  C6 84	025Dr 00	   mov file[si],0	  ;
+    120	    033F  BA 025Dr		   mov dx,offset file	  ;
+    121	    0342  E8 0000e		   call	 FileCreate	  ;
+    122	    0345  72 79	90 90		   jc quit		  ;
+    123	    0349  A3 02A7r		   mov h2,ax		  ;сохраняем дескриптор	нового файла
+    124
+    125	    034C			 cycle:
+    126
+    127					 ;читаем байт исходного	файла
+    128
+    129	    034C  8B 1E	02A5r		   mov bx,h1		  ;
+    130	    0350  B9 0001		   mov cx,1		  ;длина буфера
+    131	    0353  BA 029Cr		   mov dx,offset buf	  ;смещение буфера чтения
+    132	    0356  E8 0000e		   call	 FileRead
+    133	    0359  72 5F	90 90		   jc error		  ;
+    134
+    135					 ;перекодируем байт в буфере buf
+    136
+    137	    035D  8C D8			   mov ax,ds		  ;инициализируем ES
+    138	    035F  8E C0			   mov es,ax
+    139	    0361  33 C0			   xor ax,ax
+    140	    0363  A0 029Cr		   mov al,buf[0]	  ;символ перекодируемого буфера
+    141	    0366  8B 3E	029Dr		   mov di,old		  ;смещение исходной строки-эталона
+    142	    036A  B9 0042		   mov cx,66		  ;длина строки	эталона
+    143	    036D  FC			   cld			  ;
+    144	    036E  F2> AE		   repne scasb		  ;ищем	символ в AL в строке исходного эталона
+    145	    0370  75 15	90 90		   jnz write		  ;не нашли-перекодировать не нужно
+    146	    0374  41			   inc cx		  ;получим индекс в CX
+    147	    0375  83 E9	42		   sub cx,66
+    148	    0378  F7 D9			   neg cx
+    149	    037A  8B F1			   mov si,cx		  ;SI-индексный,а CX-нет!
+    150	    037C  8B 3E	029Fr		   mov di,new
+    151	    0380  03 FE			   add di,si
+    152	    0382  8A 05			   mov al,[di];берем новый байт	 из второй строки-эталона
+    153	    0384  A2 029Cr		   mov buf[0],al	  ;заменили
+    154
+    155	    0387			 write:
+    156
+    157					 ;пишем	перекодированный байт в	новый файл
+    158
+    159	    0387  8B 1E	02A7r		   mov bx,h2
+    160	    038B  BA 029Cr		   mov dx,offset buf	  ;
+    161	    038E  B9 0001		   mov cx,1
+    162	    0391  E8 0000e		   call	 FileWrite	  ;
+    163	    0394  72 2A	90 90		   jc quit		  ;
+    164	    0398  66| FF 0E 02A1r	   dec len
+    165	    039D  66| 83 3E 02A1r 00	   cmp len,0
+    166	    03A3  74 04	90 90		   je complete
+    167	    03A7  EB A3			   jmp cycle
+    168
+    169	    03A9			 complete:
+    170
+    171	    03A9  8B 1E	02A5r		   mov bx,h1		  ;
+Turbo Assembler	 Version 4.1	    01/05/97 11:45:34	    Page 4
+d:\asm\projects\wd\wd.ASM
+
+
+
+    172	    03AD  E8 0000e		   call	 FileClose	  ;
+    173	    03B0  8B 1E	02A7r		   mov bx,h2
+    174	    03B4  E8 0000e		   call	 FileClose	  ;
+    175	    03B7  EB 07	90		   jmp quit		  ;
+    176	    03BA			 error:			  ;
+    177	    03BA  BA 0244r		   lea dx,msg5		  ;
+    178	    03BD  E8 0000e		   call	Writeln		  ;
+    179	    03C0			 quit:			  ;
+    180	    03C0  B4 4C			   mov ah,4Ch		  ;
+    181	    03C2  CD 21			   int 21h		  ;
+    182					 end
+Turbo Assembler	 Version 4.1	    01/05/97 11:45:34	    Page 5
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "01/05/97"
+??FILENAME			  Text	 "wd	  "
+??TIME				  Text	 "11:45:34"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 DGROUP
+@CODESIZE			  Text	 0
+@CPU				  Text	 0000H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 WD
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 1
+@STACK				  Text	 DGROUP
+@STARTUP			  Near	 DGROUP:0100
+@WORDSIZE			  Text	 2
+BEGIN				  Near	 DGROUP:02EF
+BUF				  Byte	 DGROUP:029C
+COMPLETE			  Near	 DGROUP:03A9
+CYCLE				  Near	 DGROUP:034C
+DOS				  Byte	 DGROUP:0103
+ENDDATA				  Near	 DGROUP:02A9
+ERROR				  Near	 DGROUP:03BA
+FILE				  Byte	 DGROUP:025D
+FILECLOSE			  Near	 ----:---- Extern
+FILECREATE			  Near	 ----:---- Extern
+FILEOPEN			  Near	 ----:---- Extern
+FILEREAD			  Near	 ----:---- Extern
+FILESIZE			  Near	 ----:---- Extern
+FILEWRITE			  Near	 ----:---- Extern
+GET_CHAR			  Near	 DGROUP:02B5
+H1				  Word	 DGROUP:02A5
+H2				  Word	 DGROUP:02A7
+KEYPRESSED			  Near	 ----:---- Extern
+LEN				  Dword	 DGROUP:02A1
+MSG1				  Byte	 DGROUP:0187
+MSG2				  Byte	 DGROUP:01E7
+MSG3				  Byte	 DGROUP:0225
+MSG5				  Byte	 DGROUP:0244
+NEW				  Word	 DGROUP:029F
+OLD				  Word	 DGROUP:029D
+ONE				  Near	 DGROUP:02D4
+QUIT				  Near	 DGROUP:03C0
+READLN				  Near	 ----:---- Extern
+TWO				  Near	 DGROUP:02E3
+WIN				  Byte	 DGROUP:0145
+WRITE				  Near	 DGROUP:0387
+WRITELN				  Near	 ----:---- Extern
+Turbo Assembler	 Version 4.1	    01/05/97 11:45:34	    Page 6
+Symbol Table
+
+
+
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+  _TEXT				  16  03C4 Word	  Public  CODE
+

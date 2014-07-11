@@ -1,0 +1,57 @@
+º  CMPXCHG - Compare and Exchange  (486+) Ü                                    ş
+º  ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß                                    ±
+º                                                                              ±
+º  Usage:                                Opcode:                               ±
+º                                                                              ±
+º   CMPXCHG Mb,Gb                         0Fh B0h /r                           ±
+º   CMPXCHG Mv,Gv                         0Fh B1h /r                           ±
+º                                                                              ±
+º  Flags:  OF SF ZF AF PF CF TF IF DF NT RF                                    ±
+º  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ                                    ±
+º  state:  M  M  M  M  M  M                                                    ±
+º                                                                              ±
+º  CPUÿmode:  PM       RM      VM                                              ±
+º  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ                                    ±
+º  Faults:    #SF(0)                                                           ±
+º             #GP(0)   INT0D   #GP(0)                                          ±
+º             #PF(ec)          #PF(ec)                                         ±
+º             #AC(0)           #AC(0)                                          ±
+º                                                                              ±
+º  Pairable: NP                                                                
+º                                                                              ±
+º  Bug: pre-B step 486, see IBTS or XBTS                                       ±
+º                                                                              ±
+º Compares the accumulator (8-32 bits) with the destination operand. If equal  ±
+º the destination is loaded with the source operand, otherwise the accumulator ±
+º is loaded with the destination.                                              ±
+º                                                                              ±
+º                           Clocks                 Size                        ±
+º  Operands         286   386   486   586   686    Bytes                       ±
+º  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ             ±
+º  reg,reg           -     -     6     6     ?      2-3                        ±
+º  mem,reg           -     -     7     6     ?      2-3                        ±
+º ÿÿÿ                                                                          ±
+º ÿşÿ80486: add 3 clocks if the "mem,reg" comparison fails and add 2 clocks    ±
+º ÿÿÿif cache missed                                                           ±
+º                                                                              ±
+º  ş see: CMPXCHG8B                                                            ±
+
+º                                                                              
+º  SETALC/SALC - Set AL to Carry Flag  (286+) Ü                                ş
+º  ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß                                ±
+º                                                                              ±
+º  Usage:                                Opcode:                               ±
+º                                                                              ±
+º   SETALC  (undoc.)                      D6h                                  ±
+º                                                                              ±
+º  Flags:  OF SF ZF AF PF CF TF IF DF NT RF                                    ±
+º  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ                                    ±
+º  state:                 T                                                    ±
+º                                                                              ±
+º  CPUÿmode:  PM       RM      VM                                              ±
+º  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ                                    ±
+º  Faults:    #SF(0)                                                           ±
+º             #GP(0)   INT0D   #GP(0)                                          ±
+º             #PF(ec)          #PF(ec)                                         ±
+º                                                                              ±
+º Sets AL to FFh if the Carry Flag is set otherwise sets AL to 0.              ±

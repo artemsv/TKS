@@ -1,0 +1,214 @@
+            Welcome to Borland Pascal with Objects 7.0
+                      Maintenance Release
+            ------------------------------------------
+
+This README file contains instructions for installing the
+Borland Pascal with Objects 7.0 (BP7) maintenance release.  
+This maintenance release fixes several minor compatibility
+problems that have been reported in the compiler, IDEs,  
+and the Borland protected mode Dos extender, as well as minor 
+miscellaneous bugs in the demo programs.
+
+This maintenance release contains only the files which have been 
+changed from the original BP7 file set.  You must have BP7 
+installed in order to use this maintenance release.  See BP7.DIF 
+on the install disk for a complete list of all the revised 
+BP7 and Run Time Library (RTL) files included in this package.
+
+
+TABLE OF CONTENTS
+-----------------
+ 1. How to get help
+ 2. Installation
+ 3. Important note for Borland C++ and Paradox 4.0 users
+
+
+1. HOW TO GET HELP
+------------------
+If you have any problems with this product, please read this
+file first. If you still have a question and need assistance,
+help is available from the following sources:
+
+1. You can use your modem to easily obtain assistance online.
+   Borland maintains support forums on CompuServe, BIX, and
+   GEnie. There, you'll have contact with Borland technical
+   support engineers and thousands of programmers using Borland
+   products. They will answer your questions and share
+   information and ideas with you.
+
+   You can also download the latest technical information, sample
+   code, utilities, patches, etc. from these online services as
+   well as from Borland's Download Bulletin Board Service
+   (DLBBS).
+
+   Access Borland's online services in the following manner:
+
+   CompuServe
+     GO BORLAND
+
+   BIX
+     JOIN BORLAND
+
+   GEnie
+     BORLAND
+
+   Borland DLBBS
+     You can reach the Borland DLBBS by dialing (408) 439-9096
+     (up to 9600 Baud, 8 data bits, No Parity, 1 Stop bit). No
+     special setup is required.
+
+2. TechFax is a toll-free, 24-hour automated service that sends
+   free technical information to your fax machine. More than
+   1,000 documents discussing Borland software are available
+   through TechFax. These documents provide valuable technical
+   information that can be used as reference now and in the
+   future.
+
+   You can call TechFax at 1-800-822-4269 from any touch tone
+   telephone and obtain any bulletins or documents that you need.
+
+3. The Technical Support Hot Lines are available to help you with
+   questions about installation, system configuration,
+   compatibility, and or usability. Lines are open from 6:00 A.M.
+   to 5:00 P.M. Pacific Time at (408) 461-9177.
+
+4. If an advanced level of support is required, Borland offers
+   a new Advisor Lines service. Advice concerning program design,
+   debugging and performance tuning is available. Advisor Lines
+   operate from 8:00 A.M. to 5:00 P.M. Pacific Time at
+   1-900-786-6080. Each call is $2.00/minute with the first
+   minute free (available in U.S. only).
+
+When calling Borland's Technical Support, please keep your
+manuals handy and have the program running. To simplify trouble-
+shooting, please be prepared with the following information:
+
+  o Product name, serial number, and version number.
+
+  o Computer name and model and the name and model of any
+    additional hardware (video adapters, modems, etc.).
+
+  o Operating system and version number (to find the version
+    number, type VER at any DOS prompt). If you are using
+    Microsoft Windows, you can find the version number by
+    selecting Help|About from Program Manager.
+
+  o The contents of your AUTOEXEC.BAT and CONFIG.SYS files
+    (located in the root directory (\) of your computer's boot
+    disk).
+
+  o The contents of your WIN.INI and SYSTEM.INI files located in
+    your Windows directory (if you are running Windows).
+
+  o A daytime phone number where you can be reached.
+
+  o The specific steps necessary to reproduce the problem.
+
+
+2. INSTALLATION
+---------------
+IMPORTANT: This maintenance release is intended to be installed 
+over your existing BP7 installation. You should back up your 
+current BP7 installation before installing this maintenance 
+release.
+
+You can use the INSTALL batch file program to install the 
+Borland Pascal with Objects maintenance release. The files on 
+the distribution disks are all archived and INSTALL will 
+de-archive them for you.
+
+INSTALL assumes you used the default BP subdirectory structure
+when you originally installed BP7.  If you only changed the name
+of the BP base directory (ie '\BP' to '\work\tools\bp7') and left
+the BP subdirectories (ie 'BIN', 'EXAMPLES', 'UNITS', 'RTL', etc)
+unchanged, then you can simply install over your existing BP 
+files.
+
+If you changed any of the BP subdirectory names in the original 
+BP install program (other than the BP root directory), then you 
+should NOT install the maintenance release over your existing BP 
+files.
+Instead, create an empty temporary directory, run the maintenance
+release install program to install to that temporary directory, 
+then copy the new files from the temporary directory to their 
+corresponding places in your directory structure.
+
+If you aren't sure whether or not your system has the default BP
+subdirectory structure, install the maintenance release into a
+temporary directory and copy the files over to your BP7 
+installation manually.
+
+Installing over your existing files should require little or no
+additional disk space. Installing to a new temporary directory 
+will require approximately 3 Mb of hard disk space.
+
+To start the installation, place the disk labeled INSTALL in
+Drive A: and change directories to the A: drive by typing 
+A: <ENTER> at the Dos command prompt.  At the next Dos prompt, 
+type
+
+  INSTALL <destination>  <Windows dir>
+
+where <destination> is the drive and directory you want to have
+the maintenance release files copied to and <Windows dir> is your
+Windows directory.  The destination should be your existing BP7
+base directory or a temporary directory as described above.  For
+example, if you installed BP7 to your \BP directory on C: drive
+using the default BP subdirectories, and your Windows directory
+is C:\WINDOWS, you'd run install like this:
+
+  INSTALL  C:\BP  C:\WINDOWS
+
+The Windows directory is needed so that the install program can 
+copy an updated version of BWCC.DLL to your windows system 
+directory.
+
+This maintenance release installation will update several of the 
+units in your \BP\UNITS directory, as well as the .TPL files and 
+compilers in your \BP\BIN directory. After installation, you 
+should perform a complete 'build' of all of your source code with 
+the new files to ensure that your programs are built using the 
+latest compiler and libraries.
+
+
+3. IMPORTANT NOTE FOR BORLAND C++ AND PARADOX 4.0 USERS
+-------------------------------------------------------
+The DPMILOAD.EXE and DPMI16BI.OVL files provided with this
+release replace the older ones that came with Paradox 4.0 and
+BC++ 3.0 or later. Delete or rename the older versions and put
+\BP\BIN on your DOS path (so Paradox and BC can use the newer
+ones).
+
+If you want to be able to run BC++ or Paradox from within BP.EXE,
+you will need to use the EXTLEAVE option for the RTM environment
+variable in order to leave enough memory available. For example,
+you can set aside 2 MB for other programs by using:
+
+  SET RTM=EXTLEAVE 2048
+
+See the printed documentation for more information regarding the
+RTM environment variable.
+
+If you plan to shell out from Paradox or BC++ to run BP.EXE,
+limit the amount of extended memory used by those programs. For
+Paradox, use its /extk command-line parameter; for BC++, use its
+/x command-line parameter. Refer to their documentation for more
+information on the use of command-line options.
+
+Here's a summary for troubleshooting purposes:
+
+  1.  Are there any copies of DPMILOAD.EXE or DPMI16BI.OVL on the
+      path prior to those provided in \BP\BIN or in the same
+      directories as BC.EXE or PARADOX.EXE? If so, replace them
+      with Borland Pascal with Objects 7.0's newer versions, or
+      remove them and set your DOS path correctly.
+
+  2.  Have you set the RTM environment variable? For example:
+
+        SET RTM=EXTLEAVE 2048
+
+  3.  If starting Paradox or BC first, have you used the required
+      command-line options?
+
+                   --------------------------------
+

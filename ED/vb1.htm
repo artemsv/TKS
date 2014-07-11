@@ -1,0 +1,81 @@
+html>
+<head>
+<title>Угадай число</title>
+</head>
+<body bgcolor="white" text="black">
+< ... html код формы взаимодействия с VB программой ... >
+<script language="VBscript">
+
+<a href="http://wanderfly.da.ru/" name="link">
+Наведите на эту ссылку указатель мыши</a>
+<script language="vbscript"><!--
+sub link_onmouseover
+alert "ссылка"
+end sub
+--></script>
+
+
+<FORM NAME=ugadai>
+<INPUT TYPE="button" NAME="begin"
+VALUE="Загадать число"><BR><BR>
+Ваш вариант:<BR>
+<INPUT TYPE="text" NAME="chislo">
+<BR>
+<INPUT TYPE="button" NAME="but"
+VALUE="Enter">
+</FORM>
+
+<!--******************* угадай число ************************-->
+<script language="vbscript"><!--
+dim a		' определяем переменные
+dim p
+dim v
+
+sub begin_onclick 	' процедура срабатывающая при нажатии
+			  (событие onclick)
+			' кнопки с именем begin
+ randomize		' включение генератора случайных чисел
+ a=int(rnd(1)*100+1)	' присваивание переменной (a) случайного
+			  значения
+ p = 1			' обнуление счетчика
+ alert "число загадано" ' вывод сообщения в отдельном окне 
+end sub			' конец процедуры
+
+sub but_onclick		' процедура срабатывающая при нажатии
+			 (событие onclick) кнопки с именем but
+
+ v = document.ugadai.chislo.value 
+
+' переменной (v) присваивается значение 
+' содержащееся в поле ввода формы
+' путь: документ (просто эта html страница).форма с именем ugadai.
+' объект- поле для ввода с именем chislo. свойство value
+
+ v=cint(v)	' поскольку поле для ввода содержит текстовую
+		' информацию, то переменную (v) надо преобра-
+ 		' зовать в целочисленный тип (функция cint)
+
+ if a > v then
+   alert "загаданное число больше, попробуйте еще"
+   p = p + 1
+ end if
+
+ if a < v then
+   alert "загаданное число меньше, попробуйте еще"
+   p = p + 1
+ end if 
+   
+ if a = v then		  
+   document.write"<center>Победа за "&p&" ходов.</center>"
+ end if
+		' оператор document.write выводит содержащуюся
+		' в кавычках информацию в новое окно броузера
+		' как html код.
+				
+end sub
+--></script>
+
+
+</script>
+</body>
+</html>

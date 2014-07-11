@@ -1,0 +1,235 @@
+Turbo Assembler	 Version 4.1	    04/09/96 05:44:48	    Page 1
+crt.ASM
+
+
+
+      1					 ;	 модуль	с процедурами управления дисплеем и клавиатурой
+      2					 ;	 (c) Copyright 2002 by Sokolov Artem
+      3					 ;	 дата создания:	    05.12.02
+      4
+      5	    0000			 .model	small
+      6					 .386
+      7	    0000			 .code
+      8
+      9						 extrn GetStart:proc
+     10
+     11					 PUBLIC	CaretInsert,CaretNormal,CaretShow,CaretHide,Cls,OverScan,Writeln,GotoXY
+     12					 PUBLIC	WhereXy,Readln,KeyPressed,Pause,ReadKey,FillWord,FillByte,OutDW,OutDB
+     13
+     14	    0000			 CaretInsert :
+     15	    0000  B5 02				 mov ch,00000010B
+     16	    0002  EB 07				 jmp short Caret1
+     17	    0004			 CaretHide:
+     18	    0004  B9 2000			 mov cx,2000h
+     19	    0007  EB 02				 jmp short Caret1
+     20	    0009			 CaretShow:
+     21	    0009			 CaretNormal:
+     22	    0009  B5 0E				 mov ch,00001110B
+     23	    000B			 Caret1:
+     24	    000B  B4 01				 mov ah,1
+     25	    000D  32 C9				 xor cl,cl
+     26	    000F  EB 21				 jmp short int10hRET
+     27
+     28	    0011			 OverScan:
+     29	    0011  B8 1001			 mov ax,1001h
+     30	    0014  EB 1C				 jmp short int10hRET
+     31
+     32	    0016			 Cls:				 ; очищает экран
+     33	    0016  FC				 cld
+     34	    0017  B8 B800			 mov ax,0B800H
+     35	    001A  8E C0				 mov es,ax
+     36	    001C  BF 0000			 mov di,0
+     37	    001F  B9 07D0			 mov cx,2000
+     38	    0022  B0 20				 mov al,32
+     39	    0024  B4 07				 mov ah,7
+     40	    0026  F3> AB			 rep stosw
+     41	    0028  C3				 ret
+     42
+     43	    0029			 Writeln:			 ; выводит строку с ограничительным символом
+     44	    0029  B4 09				 mov ah,9
+     45	    002B  CD 21				 int 21h
+     46	    002D  C3				 ret
+     47
+     48	    002E			 GotoXY:				 ;позицион-е курсора;DH-row,DL-column
+     49	    002E  B7 00				 mov bh,0			 ;номер	страницы
+     50	    0030  B4 02				 mov ah,2
+     51	    0032			 int10hRET:
+     52	    0032  CD 10				 int 10h
+     53	    0034  C3				 ret
+     54
+     55	    0035			 WhereXY:				 ;возвращает: DH-row,DL-column
+     56	    0035  B7 00				 mov bh,0
+     57	    0037  B4 03				 mov ah,3
+Turbo Assembler	 Version 4.1	    04/09/96 05:44:48	    Page 2
+crt.ASM
+
+
+
+     58	    0039  EB F7				 jmp short int10hRET
+     59
+     60	    003B			 Readln:				 ;ввод строки произвольной длины
+     61					 ;на входе:
+     62					 ;dx - адрес строки куда будет помещен ввод
+     63					 ;cl - максимальная длина вводимой строки
+     64					 ;на выходе - введенная	строка по адресу dx
+     65					 ;bx - длина введенной строки
+     66	    003B  56				 push si
+     67	    003C  8B FA				 mov di,dx
+     68	    003E  88 0D				 mov [di],cl		 ;в первый символ строки-длину буфера
+     69	    0040  B4 0A				 mov ah,0ah		 ;функция ввода	строки с клавиатуры
+     70	    0042  CD 21				 int 21h ;после	прерывания в buf[0]-заявленная длина,в buf[1]-реальная
+     71	    0044  8A 45	01			 mov al,[di+1]
+     72	    0047  8A C8				 mov cl,al	 ;длина	введенной строки в al
+     73						 ;сдвиг	buf на два байта влево:
+     74	    0049  1E				 push	 ds
+     75	    004A  07				 pop	 es
+     76	    004B  8B F7				 mov	 si,di
+     77	    004D  83 C6	02			 add	 si,2
+     78	    0050  FC				 cld
+     79	    0051  F3> A4			 rep	 movsb
+     80	    0053  33 C9				 xor	 cx,cx
+     81	    0055  8A C8				 mov   cl,al
+     82	    0057  8B D9				 mov   bx,cx
+     83	    0059  5E				 pop si
+     84	    005A  C3				 ret
+     85
+     86	    005B			 KeyPressed:				 ;если AL=0,то в AH-расширенный	код
+     87	    005B  52				 push dx
+     88	    005C  B4 06				 mov ah,6
+     89	    005E  B2 FF				 mov dl,0FFH
+     90	    0060  CD 21				 int 21h
+     91	    0062  74 06				 jz short no_char		 ;нет ввода
+     92	    0064  3C 00				 cmp al,0			 ;расширенный код
+     93	    0066  74 04				 je short ext_char
+     94	    0068  B4 00				 mov ah,0
+     95	    006A			 no_char:
+     96	    006A  5A				 pop dx
+     97	    006B  C3				 ret
+     98	    006C			 ext_char:
+     99	    006C  CD 21				 int 21h			 ;получаем второй байт
+    100	    006E  B4 01				 mov ah,1
+    101	    0070  5A				 pop dx
+    102	    0071  C3				 ret
+    103
+    104	    0072			 Pause:
+    105	    0072  B4 01				 mov ah,1
+    106	    0074  CD 21				 int 21h
+    107	    0076  C3				 ret
+    108
+    109	    0077			 FillWord:			 ;DX-верхний угол,CX-кол-во слов,AX-слово
+    110	    0077  06 57	56 51			 push es di si cx
+    111	    007B  E8 0000e			 call GetStart
+    112	    007E  F3> AB			 rep stosw
+    113	    0080  59 5E	5F 07			 pop cx	si di es
+    114	    0084  C3				 ret
+Turbo Assembler	 Version 4.1	    04/09/96 05:44:48	    Page 3
+crt.ASM
+
+
+
+    115
+    116	    0085			 FillByte:			 ;DX-верхний угол,CX-кол-во слов,AL-байт
+    117	    0085  06 57				 push es di
+    118	    0087  E8 0000e			 call GetStart
+    119	    008A			 FB100:
+    120	    008A  AA				 stosb
+    121	    008B  47				 inc di
+    122	    008C  E2 FC				 loop FB100
+    123	    008E  5F 07				 pop di	es
+    124	    0090  C3				 ret
+    125
+    126	    0091			 OutDB:				 ;DX-верхний угол,CX-длина,SI-строка источник
+    127	    0091  06 57	51			 push es di cx
+    128	    0094  9C				 pushf			 ;если CF сброшен,атрибут не учитывать
+    129	    0095  E8 0000e			 call GetStart
+    130	    0098  9D				 popf
+    131	    0099  FC				 cld
+    132	    009A  9C			 ODB100: pushf
+    133	    009B  80 3C	0D			 cmp byte ptr [si],13
+    134	    009E  74 11				 je short ODB400
+    135	    00A0  80 3C	00			 cmp byte ptr [si],0
+    136	    00A3  74 0C				 je short ODB400
+    137	    00A5  A4				 movsb
+    138	    00A6  9D				 popf
+    139	    00A7  73 03				 jnc short ODB200
+    140	    00A9  AA				 stosb
+    141	    00AA  EB 01				 jmp short ODB300
+    142	    00AC  47			 ODB200: inc di
+    143	    00AD  E2 EB			 ODB300: loop ODB100
+    144	    00AF  EB 01				 jmp short ODB500
+    145	    00B1  9D			 ODB400: popf
+    146	    00B2  59 5F	07		 ODB500: pop cx	di es
+    147	    00B5  C3				 ret
+    148
+    149	    00B6			 OutDW :
+    150	    00B6  06 57				 push es di
+    151	    00B8  E8 0000e			 call GetStart
+    152	    00BB  F3> A5			 rep movsw
+    153	    00BD  5F 07				 pop di	es
+    154	    00BF  C3				 ret
+    155
+    156	    00C0			 ReadKey:			 ;при возврате уст. ZF=1,если расшир.клавиша
+    157	    00C0  B4 00				 mov ah,0		 ;тогда	в AH - расширенный код
+    158	    00C2  CD 16				 int 16h		 ;если ZF=0,тогда в AL ASCII-код,в AH scan-код
+    159					 ;	 cmp al,0
+    160	    00C4  C3				 ret
+    161					 end
+Turbo Assembler	 Version 4.1	    04/09/96 05:44:48	    Page 4
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "04/09/96"
+??FILENAME			  Text	 "crt	  "
+??TIME				  Text	 "05:44:48"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0F0FH
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 CRT
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+CARET1				  Near	 _TEXT:000B
+CARETHIDE			  Near	 _TEXT:0004
+CARETINSERT			  Near	 _TEXT:0000
+CARETNORMAL			  Near	 _TEXT:0009
+CARETSHOW			  Near	 _TEXT:0009
+CLS				  Near	 _TEXT:0016
+EXT_CHAR			  Near	 _TEXT:006C
+FB100				  Near	 _TEXT:008A
+FILLBYTE			  Near	 _TEXT:0085
+FILLWORD			  Near	 _TEXT:0077
+GETSTART			  Near	 _TEXT:---- Extern
+GOTOXY				  Near	 _TEXT:002E
+INT10HRET			  Near	 _TEXT:0032
+KEYPRESSED			  Near	 _TEXT:005B
+NO_CHAR				  Near	 _TEXT:006A
+ODB100				  Near	 _TEXT:009A
+ODB200				  Near	 _TEXT:00AC
+ODB300				  Near	 _TEXT:00AD
+ODB400				  Near	 _TEXT:00B1
+ODB500				  Near	 _TEXT:00B2
+OUTDB				  Near	 _TEXT:0091
+OUTDW				  Near	 _TEXT:00B6
+OVERSCAN			  Near	 _TEXT:0011
+PAUSE				  Near	 _TEXT:0072
+READKEY				  Near	 _TEXT:00C0
+READLN				  Near	 _TEXT:003B
+WHEREXY				  Near	 _TEXT:0035
+WRITELN				  Near	 _TEXT:0029
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+_TEXT				  16  00C5 Word	  Public  CODE
+

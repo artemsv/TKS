@@ -1,0 +1,38 @@
+  call Cls
+
+  mov di,0
+  mov al,'É'
+  stosw
+
+  mov al,'Í'
+  mov cx,78
+  rep stosw
+  
+  mov al,'»'
+  stosw
+
+  mov cx,23
+w:
+  mov al,'º'
+  stosw
+  add di,158
+  loop w
+  
+  mov al,'È'
+  stosw
+
+  mov al,'Í'
+  mov cx,78
+  rep stosw
+
+  mov cx,23
+  mov di,318
+q:
+  mov al,'º'
+  stosw
+  add di,158
+  loop q
+
+  mov al,'¼'
+  stosw
+  

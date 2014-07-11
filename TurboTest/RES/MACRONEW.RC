@@ -1,0 +1,11 @@
+3 DIALOG 78, 86, 207, 64
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Новое макро-определение"
+FONT 8, "MS Sans Serif"
+{
+ DEFPUSHBUTTON "Ввести", IDOK, 44, 44, 50, 14
+ PUSHBUTTON "Отмена", IDCANCEL, 112, 44, 50, 14
+ EDITTEXT 101, 8, 20, 140, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+ LTEXT "Введите текст нового макро-определения (30 символов)", -1, 8, 7, 196, 8
+}
+

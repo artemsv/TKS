@@ -1,0 +1,24 @@
+3450 DIALOG 37, 26, 286, 194
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Выбор тестируемого"
+FONT 8, "MS Sans Serif"
+{
+ CONTROL "Выбрать", IDOK, "BUTTON", WS_TABSTOP, 140, 166, 50, 14
+ PUSHBUTTON "Отмена", IDCANCEL, 200, 166, 50, 14
+ LTEXT "Выберите им\xFF тестируемого:", -1, 12, 12, 104, 8
+ LISTBOX 101, 12, 24, 100, 168, LBS_STANDARD
+ ICON 401, -1, 184, 24, 18, 20
+ GROUPBOX "", 102, 4, 4, 276, 186, BS_GROUPBOX
+ LTEXT "Преподаватель:", -1, 120, 76, 60, 8
+ LTEXT "Махмудходжаевский Щ.Щ.", 32, 184, 76, 92, 8
+ LTEXT "Дата:", -1, 120, 60, 60, 8
+ LTEXT "Text", 31, 184, 60, 60, 8
+ LTEXT "Группа:", -1, 120, 92, 60, 8
+ LTEXT "Text", 33, 184, 92, 60, 8
+ LTEXT "Тема:", -1, 120, 108, 60, 8
+ LTEXT "Text", 34, 184, 108, 60, 8
+ LTEXT "Вопросов:", -1, 120, 124, 60, 8
+ LTEXT "Text", 35, 184, 124, 60, 8
+ LTEXT "Времени на один вопрос:", -1, 120, 140, 88, 8
+ LTEXT "Text", 36, 216, 140, 28, 8
+}

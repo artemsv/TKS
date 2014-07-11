@@ -1,0 +1,129 @@
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 1
+msg.ASM
+
+
+
+      1	    0000			 .model	small
+      2					 .386
+      3	    0000			 .data
+      4	    0000  8E E8	A8 A1 AA A0 20+		 msgAccessErr	 db	 'Ошибка доступа к файлу',13
+      5		  A4 AE	E1 E2 E3 AF A0+
+      6		  20 AA	20 E4 A0 A9 AB+
+      7		  E3 0D
+      8	    0017  46 69	6C 65 20 68 61+		 msgSaveFile	 db	 'File has been	modified.Save?'
+      9		  73 20	62 65 65 6E 20+
+     10		  6D 6F	64 69 66 69 65+
+     11		  64 2E	53 61 76 65 3F
+     12	    0033  20 20	20 4F 6B 20 20+		 msgOk		 db	 '   Ok	  '
+     13		  20
+     14	    003B  20 20	59 65 73 20 20+		 msgYes		 db	 '  Yes	  '
+     15		  20
+     16	    0043  20 20	20 4E 6F 20 20+		 msgNo		 db	 '   No	  '
+     17		  20
+     18	    004B  20 43	61 6E 63 65 6C+		 msgCancel	 db	 ' Cancel '
+     19		  20
+     20	    0053  49 6E	73 65 72 74 20+		 msgInsert	 db	 'Insert  '
+     21		  20
+     22	    005B  4F 76	65 72 72 69 74+		 msgOverrite	 db	 'Overrite'
+     23		  65
+     24	    0063  54 75	72 62 6F 20 41+		 msgAbout	 db	 'Turbo	AsmEdit',13,13,'Version	1.0',13,13
+     25		  73 6D	45 64 69 74 0D+
+     26		  0D 56	65 72 73 69 6F+
+     27		  6E 20	31 2E 30 0D 0D
+     28	    007F  43 6F	70 79 72 69 67+				 db	 'Copyright (c)	2002,2003 by',13,13
+     29		  68 74	20 28 63 29 20+
+     30		  32 30	30 32 2C 32 30+
+     31		  30 33	20 62 79 0D 0D
+     32	    009B  53 6F	6B 6F 6C 20 53+				 db	 'Sokol	Software',13,0
+     33		  6F 66	74 77 61 72 65+
+     34		  0D 00
+     35	    00AB  55 6E	6B 6E 6F 77 6E+		 msgErr		 db	 'Unknown error	code.',13,0
+     36		  20 65	72 72 6F 72 20+
+     37		  63 6F	64 65 2E 0D 00
+     38	    00C0  46 69	6C 65 20 6E 6F+		 msgIOErr02	 db	 'File not found.',13,0
+     39		  74 20	66 6F 75 6E 64+
+     40		  2E 0D	00
+     41	    00D1  50 61	74 68 20 6E 6F+		 msgIOErr03	 db	 'Path not found.',13,0
+     42		  74 20	66 6F 75 6E 64+
+     43		  2E 0D	00
+     44	    00E2  41 63	63 65 73 73 20+		 msgIOErr05	 db	 'Access denied.',13,0
+     45		  64 65	6E 69 65 64 2E+
+     46		  0D 00
+     47
+     48					 PUBLIC	msgSaveFile,msgYes,msgNo,msgCancel,msgInsert,msgOverrite,msgAbout
+     49					 PUBLIC	IOError,msgOk
+     50	    00F2			 .code
+     51					 extrn MsgBox:proc
+     52	    0000			 IOError:
+     53	    0000  3D 0002			 cmp ax,02
+     54	    0003  75 05				 jne short IOE100
+     55	    0005  BE 00C0r			 lea si,msgIOErr02
+     56	    0008  EB 17				 jmp short IOE400
+     57	    000A  3D 0003		 IOE100: cmp ax,03
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 2
+msg.ASM
+
+
+
+     58	    000D  75 05				 jne short IOE200
+     59	    000F  BE 00D1r			 lea si,msgIOErr03
+     60	    0012  EB 0D				 jmp short IOE400
+     61	    0014  3D 0005		 IOE200: cmp ax,05
+     62	    0017  75 05				 jne short IOE300
+     63	    0019  BE 00E2r			 lea si,msgIOErr05
+     64	    001C  EB 03				 jmp short IOE400
+     65	    001E  BE 00ABr		 IOE300: lea si,msgErr
+     66	    0021  E8 0000e		 IOE400: call MsgBox
+     67	    0024  C3				 ret
+     68
+     69					 end
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 3
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "23/04/03"
+??FILENAME			  Text	 "msg	  "
+??TIME				  Text	 "16:38:00"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0F0FH
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 MSG
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+IOE100				  Near	 _TEXT:000A
+IOE200				  Near	 _TEXT:0014
+IOE300				  Near	 _TEXT:001E
+IOE400				  Near	 _TEXT:0021
+IOERROR				  Near	 _TEXT:0000
+MSGABOUT			  Byte	 DGROUP:0063
+MSGACCESSERR			  Byte	 DGROUP:0000
+MSGBOX				  Near	 _TEXT:---- Extern
+MSGCANCEL			  Byte	 DGROUP:004B
+MSGERR				  Byte	 DGROUP:00AB
+MSGINSERT			  Byte	 DGROUP:0053
+MSGIOERR02			  Byte	 DGROUP:00C0
+MSGIOERR03			  Byte	 DGROUP:00D1
+MSGIOERR05			  Byte	 DGROUP:00E2
+MSGNO				  Byte	 DGROUP:0043
+MSGOK				  Byte	 DGROUP:0033
+MSGOVERRITE			  Byte	 DGROUP:005B
+MSGSAVEFILE			  Byte	 DGROUP:0017
+MSGYES				  Byte	 DGROUP:003B
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  00F2 Word	  Public  DATA
+_TEXT				  16  0025 Word	  Public  CODE
+

@@ -1,0 +1,12 @@
+copy d:\asm\projects\ed\ed.asm a:\ed.asm
+copy d:\asm\projects\ed\m.asm a:\m.asm
+copy d:\asm\projects\ed\n.asm a:\n.asm
+copy d:\asm\lib\b.asm a:\b.asm
+copy d:\asm\lib\w.asm a:\w.asm
+copy d:\asm\lib\io.asm a:\io.asm
+copy d:\asm\lib\crt.asm a:\crt.asm
+copy d:\asm\lib\std.asm a:\std.asm
+copy d:\asm\lib\ms.asm a:\ms.asm
+copy d:\asm\lib\k.asm a:\k.asm
+copy d:\asm\lib\math.asm a:\math.asm
+copy d:\asm\lib\v.asm a:\v.asm

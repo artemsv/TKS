@@ -1,0 +1,64 @@
+Publics by module
+
+b       	size = 511
+	BUFL                              BUFR
+	CHARFROMPOS                       GETCURY
+	INSERTTEXT                        ISALPHA
+	ISSPACER                          LEN
+	LINEEND                           LINESTART
+	MOVE                              NEXTCHAR
+	NEXTLINE                          OUTSTR
+	PARSESTR                          POSFROMCHAR
+	PREVCHAR                        
+
+crt     	size = 197
+	CARETHIDE                         CARETINSERT
+	CARETNORMAL                       CARETSHOW
+	CLS                               FILLBYTE
+	FILLWORD                          GOTOXY
+	KEYPRESSED                        OUTDB
+	OUTDW                             OVERSCAN
+	PAUSE                             READKEY
+	READLN                            WHEREXY
+	WRITELN                         
+
+io      	size = 61
+	FILECLOSE                         FILECREATE
+	FILEOPEN                          FILEREAD
+	FILESIZE                          FILEWRITE
+
+k       	size = 437
+	BACK                              COUNTLINES
+	CTRLDEL                           CTRLR
+	CTRLRIGHT                         CTRLT
+	CTRLY                             DELETE
+	DOWN                              GOEND
+	HOME                              MINUS
+	PGDOWN                            PGUP
+	PLUS                              UP
+
+math    	size = 173
+	VAL                             
+
+ms      	size = 130
+	GETMOUSEINFO                      MOUSEBUTTONS
+	MOUSEHIDE                         MOUSEINIT
+	MOUSERELEASE                      MOUSESETPOS
+	MOUSESHOW                         MOUSEWHERE
+
+std     	size = 298
+	COPYFILES                         EXEC
+	FREEMEM                           GETCURDIR
+	GETCURDRIVE                       GETMEM
+	INITEXE                           SETCURDIR
+
+v       	size = 160
+	BUTTON                            HANDLERPTR
+	HANDLERSTD                        INITPTR
+	INITSTD                           WINDOW
+
+w       	size = 470
+	CHANGEATRIBUT                     FILLBACKBLOCK
+	GETBLOCK                          GETSTART
+	PUTBLOCK                          SHADOW
+	WIN1                              WIN2

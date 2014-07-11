@@ -1,0 +1,82 @@
+Turbo Assembler	 Version 4.1	    31/08/96 10:59:45	    Page 1
+d:\asm\projects\ts\ts.ASM
+
+
+
+      1	0000			     .model tiny
+      2				     extrn OutDB:proc
+      3	0000			     .code
+      4				     .startup
+1     5	0100			     @Startup:
+      6	0100  EB 39 90		     jmp install
+      7	0103			     Hook70 proc far ;обpабока int 70
+      8	0103  50			  push ax
+      9	0104  53			  push bx
+     10	0105  51			  push cx
+     11	0106  57			  push di
+     12	0107  1E			  push ds
+     13	0108  06			  push es
+     14	0109  8C C8			  mov  ax,cs	 ;сегмент pезедента
+     15	010B  8E D8			  mov  ds,ax
+     16	010D  EB 1E 90			  jmp w
+     17	0110  8F E0 A8 A2 A5 E2	20+	     der db 'Привет из прерывания 70!!!',13,10,'$'
+     18	      A8 A7 20 AF E0 A5	E0+
+     19	      EB A2 A0 AD A8 EF	20+
+     20	      37 30 21 21 21 0D	0A+
+     21	      24
+     22	012D			     w:
+     23	012D  BA 0110r			  lea dx,der
+     24	0130  B4 09			  mov ah,9
+     25	0132  CD 21			  int 21h
+     26	0134  07			  pop  es
+     27	0135  1F			  pop  ds
+     28	0136  5F			  pop  di
+     29	0137  59			  pop  cx
+     30	0138  5B			  pop  bx
+     31	0139  58			  pop  ax
+     32	013A  CF			  iret
+     33	013B			     endp
+     34	013B			     install:
+     35	013B  BA 0103r		       mov dx,offset Hook70
+     36	013E  B8 2546		       mov ax,2546h			  ; устанавливаем свой
+     37	0141  CD 21		       int 21h
+     38	0143  BA 013Br		       mov dx,offset install
+     39	0146  CD 27		       int 27h				   ; выйти и pез.
+     40				     end
+Turbo Assembler	 Version 4.1	    31/08/96 10:59:45	    Page 2
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "31/08/96"
+??FILENAME			  Text	 "ts	  "
+??TIME				  Text	 "10:59:45"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 DGROUP
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 TS
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 1
+@STACK				  Text	 DGROUP
+@STARTUP			  Near	 DGROUP:0100
+@WORDSIZE			  Text	 2
+DER				  Byte	 DGROUP:0110
+HOOK70				  Far	 DGROUP:0103
+INSTALL				  Near	 DGROUP:013B
+OUTDB				  Near	 ----:---- Extern
+W				  Near	 DGROUP:012D
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+  _TEXT				  16  0148 Word	  Public  CODE
+

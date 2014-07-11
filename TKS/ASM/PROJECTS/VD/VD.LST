@@ -1,0 +1,153 @@
+Turbo Assembler	 Version 4.1	    01/09/96 07:04:09	    Page 1
+d:\asm\projects\vd\vd.ASM
+
+
+
+      1	    0000			 .model	 tiny
+      2					 .586
+      3					 extrn fileread:proc,fileopen:proc,readln:proc,writeln:proc,filewrite:proc
+      4					 extrn keypressed:proc,filecreate:proc,fileclose:proc,FileSize:proc,Pause:proc
+      5					 extrn OutDB:proc,OutDW:proc
+      6					 include stdmac.inc
+1     7					 ;		 Библиотека макросов
+1     8					 ;	 (c) Copyright 2002 by Sokolov Artem
+1     9					 ;	 дата создания:	    04.12.02
+1    10
+1    11					 Exit macro cod
+1    12					   mov	 al,cod
+1    13					   mov	 ah,4ch
+1    14					   int	 21h
+1    15					 endm
+1    16
+1    17					 Prolog	macro
+1    18					   mov	 ax,@data
+1    19					   mov	 ds,ax
+1    20					 endm
+1    21
+1    22					 ReadKey  macro			 ;Ввод символа с клавиатуры.
+1    23					   mov	 ah,01h			 ;На выходе - в	al введённый символ.
+1    24					   int	 21h
+1    25					 endm
+1    26
+1    27					 OutChar macro			 ;Вывод	символа	на экран.
+1    28					 ;На входе - в dl выводимый символ.
+1    29					   mov	 ah,02h
+1    30					   int	 21h
+1    31					 endm
+1    32
+1    33					 OverScan macro	color		 ;установка цвета границы экрана
+1    34					   mov ah,0BH
+1    35					   mov bl,color
+1    36					   mov bh,0
+1    37					   int 10h
+1    38					 endm
+1    39
+1    40					 GotoXY	macro X,Y		 ;позиционирование курсора
+1    41					   mov dl,X
+1    42					   mov dh,Y
+1    43					   mov bh,0			 ;номер	страницы
+1    44					   mov ah,2
+1    45					   int 10h
+1    46					 endm
+1    47
+1    48					 OutStr	macro str,len,X1,Y1
+1    49					    mov	ax,0B800h
+1    50					    mov	es,ax
+1    51					    mov	ax,Y1
+1    52					    mov	dx,160
+1    53					    mul	dx
+1    54					    add	ax,X1
+1    55					    add	ax,X1
+1    56					    mov	di,ax
+1    57					    mov	cx,len
+Turbo Assembler	 Version 4.1	    01/09/96 07:04:09	    Page 2
+d:\asm\projects\vd\vd.ASM
+
+
+
+1    58					 next:
+1    59					    lea	si,str
+1    60					    movsb
+1    61					    inc	di;
+1    62					    loop next
+1    63					 endm
+1    64
+     65	    0000			 .code
+     66					 .startup
+1    67	    0100			 @Startup:
+     68	    0100  E9 0183		      jmp EndData
+     69	    0103  DA 4E*(C4) BF		      frame	  db '┌',78 dup(196),191
+     70	    0153  3F*(03)		      file	  db 63	dup(3)
+     71	    0192  50*(03C4)		      lin1	  dw 80	dup(3*256+196)
+     72	    0232  50*(C4)		      lin2	  db 80	dup(196)
+     73	    0282  ????????		      len	  dd ?
+     74	    0286			 EndData:
+     75	    0286  6A 00			   push	0
+     76	    0288  6A 17			   push	23
+     77	    028A  BE 0192r		   lea si,lin1
+     78	    028D  56			   push	si
+     79	    028E  6A 50			   push	80
+     80	    0290  E8 0000e		   call	OutDW
+     81	    0293  E8 0000e		   call	Pause
+     82	    0296  C3			   ret
+     83					 end
+Turbo Assembler	 Version 4.1	    01/09/96 07:04:09	    Page 3
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "01/09/96"
+??FILENAME			  Text	 "vd	  "
+??TIME				  Text	 "07:04:09"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 DGROUP
+@CODESIZE			  Text	 0
+@CPU				  Text	 0000H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 VD
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 1
+@STACK				  Text	 DGROUP
+@STARTUP			  Near	 DGROUP:0100
+@WORDSIZE			  Text	 2
+ENDDATA				  Near	 DGROUP:0286
+FILE				  Byte	 DGROUP:0153
+FILECLOSE			  Near	 ----:---- Extern
+FILECREATE			  Near	 ----:---- Extern
+FILEOPEN			  Near	 ----:---- Extern
+FILEREAD			  Near	 ----:---- Extern
+FILESIZE			  Near	 ----:---- Extern
+FILEWRITE			  Near	 ----:---- Extern
+FRAME				  Byte	 DGROUP:0103
+KEYPRESSED			  Near	 ----:---- Extern
+LEN				  Dword	 DGROUP:0282
+LIN1				  Word	 DGROUP:0192
+LIN2				  Byte	 DGROUP:0232
+OUTDB				  Near	 ----:---- Extern
+OUTDW				  Near	 ----:---- Extern
+PAUSE				  Near	 ----:---- Extern
+READLN				  Near	 ----:---- Extern
+WRITELN				  Near	 ----:---- Extern
+
+Macro Name
+
+EXIT
+GOTOXY
+OUTCHAR
+OUTSTR
+OVERSCAN
+PROLOG
+READKEY
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+  _TEXT				  16  0297 Word	  Public  CODE
+

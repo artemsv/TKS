@@ -1,0 +1,96 @@
+.model small	;модуль визуальных объектов	23.01.03.
+.386
+.data
+
+	handlerPtr	dw	0	;адрес процедуры обработки событий
+	initPtr		dw	0	;адрес процедуры инициализации
+
+	extrn buf:word
+
+PUBLIC InitStd,Window,Button,initPtr,HandlerStd,handlerPtr
+
+.code
+
+extrn GetBlock:proc,FillBackBlock:proc,Win2:proc,Shadow:proc,GetMouseInfo:proc
+extrn OutDB:proc,FillWord:proc,MouseHide:proc,MouseShow:proc,KeyPressed:proc
+extrn CaretHide:proc,CaretShow:proc,PutBlock:proc
+
+HandlerStd:			;обрабатывает только Esc и щелчок по кнопке
+	jnc short HS100		;DX-угол,BX-размер,AX-коорд.мыши(CF=1)или код
+	cmp ah,dh		;клавиши
+	jne short HS300
+	mov cl,dl
+	mov ch,dl
+	add cl,2
+	add ch,4
+	cmp al,ch
+	ja short HS300
+	cmp al,cl
+	jb short HS300
+	mov ax,3			;коды выхода:0-Ok,1-Yes,2-No,3-Cancel
+	jmp short HS200
+HS100:	cmp ah,1
+	je short HS300
+	cmp al,27
+	jne short HS300
+	mov ax,3				;Cancel
+HS200:	stc					;CF=1 - окно закрыть
+	jmp short HS400
+HS300:	clc
+HS400:	ret
+
+InitStd:
+	ret
+
+Window:						;DX-угол,BX-размер,AX-атрибут
+	push dx bx 
+	pushf					;CF-признак кнопки
+	push ax					;AX-атрибут заполнения экрана
+	call MouseHide
+	call CaretHide
+	mov ax,buf				;глобальный буфер
+	call GetBlock
+	pop ax
+	call FillBackBlock
+	popf                                    ;восстанавливаем CF
+	call Win2
+	call Shadow
+	call word ptr [initPtr]		;параметры:DX-угол,BX-размеры
+	call MouseShow
+W100:
+	call GetMouseInfo
+	jc short W300
+	call KeyPressed	
+	jz short W100
+W200:	clc				;CF сброшен-событие от клавиатуры
+W300:	call word ptr [handlerPtr]
+	jnc short W100			;CF сброшен-окно закрывать не надо
+	pop bx dx
+	push ax				;сохраняем код выхода
+	mov ax,buf
+	call PutBlock
+	call CaretShow	
+	pop ax
+	ret
+
+Button:						;DX-угол,SI-строка
+	jc short B100
+	mov al,20h				;обычная кнопка
+	jmp short B200
+B100:	mov al,2Fh				;выделенная кнопка
+B200:	push cx bx dx
+	mov cx,8
+	stc
+	call OutDB				;строка на кнопке
+	add dx,0101h
+	mov cx,8
+	mov ax,70DFh                            ;'▀'
+	call FillWord				;нижняя тень
+	add dx,0FF07h
+	mov cx,1
+	mov ax,70DCh				;'▄'
+	call FillWord				;правая тень
+	pop dx bx cx
+	ret
+
+end

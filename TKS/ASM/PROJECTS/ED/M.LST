@@ -1,0 +1,430 @@
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 1
+m.ASM
+
+
+
+      1	    0000			 .model	small
+      2					 .386
+      3	    0000			 .data
+      4						 extrn msgOk:byte,initPtr:word,handlerPtr:word,fileTMP:byte
+      5	    0000  46 69	6C 65 20 20 45+		 Menu db 'File	Edit  Search  Run  Debug  Options  Window  Help'
+      6		  64 69	74 20 20 53 65+
+      7		  61 72	63 68 20 20 52+
+      8		  75 6E	20 20 44 65 62+
+      9		  75 67	20 20 4F 70 74+
+     10		  69 6F	6E 73 20 20 57+
+     11		  69 6E	64 6F 77 20 20+
+     12		  48 65	6C 70
+     13	    0035  41 6C	74 2B 58 20 45+		 Stat db 'Alt+X	Exit F2	Save  F3 Open  F4 Assemble  F9 Run  F10	Menu  '
+     14		  78 69	74 20 46 32 20+
+     15		  53 61	76 65 20 20 46+
+     16		  33 20	4F 70 65 6E 20+
+     17		  20 46	34 20 41 73 73+
+     18		  65 6D	62 6C 65 20 20+
+     19		  46 39	20 52 75 6E 20+
+     20		  20 46	31 30 20 4D 65+
+     21		  6E 75	20 20
+     22	    0071  41 6C	74 2B 46 35 20+		      db 'Alt+F5 User Screen'
+     23		  55 73	65 72 20 53 63+
+     24		  72 65	65 6E
+     25	    0083  ????				 userBuf dw	 ?
+     26	    0085  ????				 selfBuf dw	 ?
+     27	    0087  20				 file1	 db	 ' '
+     28	    0088  6E 6F	6E 61 6D 65 30+		 file	 db	 'noname00.asm',0
+     29		  30 2E	61 73 6D 00
+     30	    0095  20 20	20 20 20 3A 20+		 indic	 db	 '     :     '
+     31		  20 20	20 20
+     32	    00A0  20 20	20 20 20 20 20+		 memory	 db	 '	   '
+     33		  20 20
+     34	    00A9  5A5A				 UserCaretPos	 dw	 5a5ah
+     35	    00AB  5A5A				 SelfCaretPos	 dw	 5a5ah
+     36	    00AD  ??				 byte1		 db	 ?
+     37	    00AE  ??				 byte2		 db	 ?
+     38	    00AF			 .code
+     39						 extrn FillWord:proc,OutDW:proc,FillBackBlock:proc,OutDW:proc,OutDB:proc
+     40						 extrn Win2:proc,GetBlock:proc,PutBlock:proc,Shadow:proc,CaretShow:proc
+     41						 extrn CaretHide:proc,ReadKey:proc,GetMem:proc,GotoXY:proc,WhereXY:proc
+     42						 extrn X:byte,Y:byte,firstLine:word,buf:word,curY:word,curX;word
+     43						 extrn ChangeAtribut:proc,FillByte:proc,bufSize:word,Window:proc
+     44						 extrn Val:proc,FillWord:proc,GetCurY:proc,OutStr:proc,Len:proc
+     45						 extrn ParseStr:proc,Button:proc,MouseHide:proc,MouseShow:proc
+     46						 extrn HandlerStd:proc,InitStd:proc
+     47
+     48					 PUBLIC	MsgBox,UpdateCaretPos,ClearWorkArea,UserScreen,Init,file
+     49					 PUBLIC	SaveSelf,RestoreSelf,UpdateFileName,ClearFileName,SaveUser,RestoreUser
+     50					 PUBLIC	UpdateMemory
+     51
+     52	    0000			 ClearFileName:				 ;заполняет пробелами поле file
+     53	    0000  1E				 push ds
+     54	    0001  07				 pop es
+     55	    0002  BF 0088r			 lea di,file
+     56	    0005  B0 20				 mov al,32
+     57	    0007  B9 000C			 mov cx,12
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 2
+m.ASM
+
+
+
+     58	    000A  F3> AA			 rep stosb
+     59	    000C  C3				 ret
+     60
+     61	    000D			 MsgBoxInit:			 ;SI-выводимая ASCIIZ строка,DX-угол,BX-размер
+     62	    000D  52 53	56			 push dx bx si
+     63	    0010  80 EB	06			 sub bl,6		 ;BL-длина поля	вывода для строки
+     64	    0013  81 C2	0203			 add dx,0203h
+     65	    0017  88 16	00ADr			 mov byte1,dl		 ;просто сохранили DL и	BL
+     66	    001B  88 1E	00AEr			 mov byte2,bl
+     67	    001F			 MBI400:			 ;цикл вывода строк текста
+     68	    001F  E8 0000e			 call Len		 ;CX-длина выводимой строки
+     69	    0022  8A 1E	00AEr			 mov bl,byte2		 ;восстановили BL-длина	поля вывода
+     70	    0026  2A D9				 sub bl,cl		 ;длина	пустого	места с	обеих сторон
+     71	    0028  D0 EB				 shr bl,1		 ;отступ слева
+     72	    002A  8A 16	00ADr			 mov dl,byte1		 ;восстановили DL
+     73	    002E  02 D3				 add dl,bl		 ;прибавляем отступ
+     74	    0030  B9 0159			 mov cx,345
+     75	    0033  B0 70				 mov al,70h		 ;атрибут
+     76	    0035  F9				 stc			 ;атрибут учитывать
+     77	    0036  E8 0000e			 call OutDB
+     78	    0039  46				 inc si			 ;пропускаем #13
+     79	    003A  80 3C	00			 cmp byte ptr [si],0	 ;0-признак конца текста
+     80	    003D  74 05				 je short MBI500	 ;это была последняя строка
+     81	    003F  80 C6	01			 add dh,1		 ;приращение по	Y
+     82	    0042  EB DB				 jmp short MBI400
+     83	    0044			 MBI500:
+     84					 ;	 add dx,0A0Ch
+     85	    0044  BE 0000e			 lea si,msgOk
+     86	    0047  F9				 stc
+     87	    0048  E8 0000e			 call Button
+     88	    004B  5E 5B	5A			 pop si	bx dx
+     89	    004E  C3				 ret
+     90
+     91	    004F			 MsgBoxHandler:			 ;обработчик событий для окна сообщений
+     92	    004F  E8 0000e			 call HandlerStd
+     93	    0052  C3			 MBH600: ret
+     94
+     95	    0053			 MsgBox:			 ;SI-выводимая ASCIIZ строка
+     96	    0053  06 57	53 51 52		 push es di bx cx dx	 ;байт после терминального нуля-тип клавиш
+     97	    0058  1E				 push ds
+     98	    0059  07				 pop es			 ;сегмент источника
+     99	    005A  BB 0600			 mov bx,0600h		 ;первоначально	размеры	окна равны 6x0
+    100	    005D  E8 0000e			 call ParseStr		 ;BL-длина макс.подстроки,CH-кол-во подстрок
+    101						 ;теперь вычислим размеры окна - DX и BX
+    102	    0060  33 C0				 xor ax,ax
+    103	    0062  8A C3				 mov al,bl		 ;BL-длина наибольшей строки
+    104	    0064  B2 02				 mov dl,2		 ;делитель
+    105	    0066  F6 F2				 div dl			 ;AL-частное(половина наиб.строки),AH-остаток
+    106	    0068  04 03				 add al,3		 ;1 символ на рамку и 2	на отступ
+    107	    006A  B2 28				 mov dl,40		 ;половина длины экрана
+    108	    006C  2A D0				 sub dl,al		 ;DL-координата	X угла окна
+    109	    006E  02 FD				 add bh,ch		 ;BH-высота окна
+    110	    0070  80 C3	06			 add bl,6		 ;BL-длина окна
+    111	    0073  B6 19				 mov dh,25		 ;высота экрана
+    112	    0075  2A F7				 sub dh,bh
+    113	    0077  D0 EE				 shr dh,1		 ;делим	пополам	- DH-координата	Y угла окна
+    114	    0079  B8 7F20			 mov ax,7F20h		 ;атрибут для заполнения окна
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 3
+m.ASM
+
+
+
+    115	    007C  BF 000Dr			 lea di,MsgBoxInit
+    116	    007F  89 3E	0000e			 mov word ptr initPtr,di
+    117	    0083  BF 004Fr			 lea di,MsgBoxHandler
+    118	    0086  89 3E	0000e			 mov word ptr handlerPtr,di
+    119	    008A  F8				 clc			 ;кнопка нужна
+    120	    008B  E8 0000e			 call Window
+    121	    008E  5A 59	5B 5F 07		 pop dx	cx bx di es
+    122	    0093  C3				 ret
+    123
+    124	    0094			 UpdateCaretPos:
+    125	    0094  BA 1704			 mov dx,1704h
+    126	    0097  B0 CD				 mov al,205
+    127	    0099  B9 000A			 mov cx,10
+    128	    009C  E8 0000e			 call FillByte			 ;восстановим рамку
+    129	    009F  66| B8 00000000		 mov eax,0			 ;на всякий случай старшее слово EAX=0
+    130	    00A5  E8 0000e			 call GetCurY			 ;AX=curY
+    131	    00A8  BE 0095r			 lea si,indic
+    132	    00AB  E8 0000e			 call Val			 ;CX-число цифр
+    133	    00AE  8B D9				 mov bx,cx
+    134	    00B0  C6 00	3A			 mov byte ptr [si][bx],':'
+    135	    00B3  41				 inc cx
+    136	    00B4  51				 push cx
+    137	    00B5  BA 1704			 mov dx,1704h
+    138	    00B8  E8 0000e			 call OutDB
+    139	    00BB  33 C0				 xor ax,ax
+    140	    00BD  2E: A0 0000e			 mov al,X
+    141	    00C1  BE 0095r			 lea si,indic
+    142	    00C4  E8 0000e			 call Val
+    143	    00C7  58				 pop ax
+    144	    00C8  02 D0				 add dl,al
+    145	    00CA  E8 0000e			 call OutDB
+    146	    00CD  2E: 8A 36 0000e		 mov dh,Y
+    147	    00D2  2E: 8A 16 0000e		 mov dl,X
+    148	    00D7  E8 0000e			 call GotoXY
+    149	    00DA  C3				 ret
+    150
+    151	    00DB			 ClearWorkArea:
+    152	    00DB  52 50	53 51			 push dx ax bx cx
+    153	    00DF  BA 0201			 mov dx,0201h
+    154	    00E2  BB 154E			 mov bx,154Eh
+    155	    00E5  B8 1F20			 mov ax,1F20h
+    156	    00E8  E8 0000e			 call FillBackBlock
+    157	    00EB  59 5B	58 5A			 pop cx	bx ax dx
+    158	    00EF  C3				 ret
+    159
+    160	    00F0  BB 0100		 Init:	 mov bx,256
+    161	    00F3  E8 0000e			 call GetMem
+    162	    00F6  A3 0085r			 mov selfBuf,ax
+    163	    00F9  E8 0000e			 call GetMem
+    164	    00FC  A3 0083r			 mov userBuf,ax
+    165	    00FF  E8 0056			 call SaveUser
+    166
+    167	    0102  BA 0000			 mov dx,0000h
+    168	    0105  B9 07D0			 mov cx,2000
+    169	    0108  B8 7020			 mov ax,7020h
+    170	    010B  E8 0000e			 call FillWord
+    171
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 4
+m.ASM
+
+
+
+    172	    010E  BA 0100			 mov dx,0100h
+    173	    0111  BB 1750			 mov bx,1750h
+    174	    0114  B8 1F00			 mov ax,1F00h
+    175	    0117  E8 0000e			 call ChangeAtribut
+    176
+    177	    011A  BA 1801			 mov dx,1801h
+    178	    011D  BE 0035r			 lea si, Stat
+    179	    0120  B9 004E			 mov cx,78
+    180	    0123  F8				 clc
+    181	    0124  E8 0000e			 call OutDB
+    182
+    183	    0127  BA 0001			 mov dx,0001h
+    184	    012A  BE 0000r			 lea si,Menu
+    185	    012D  B9 0035			 mov cx,53
+    186	    0130  F8				 clc
+    187	    0131  E8 0000e			 call OutDB
+    188
+    189	    0134  BA 0100			 mov dx,0100h
+    190	    0137  BB 1750			 mov bx,1750h
+    191	    013A  F9				 stc			 ;кнопка не нужна
+    192	    013B  E8 0000e			 call Win2
+    193	    013E  E8 0070			 call UpdateFileName
+    194	    0141  C3				 ret
+    195
+    196	    0142			 SaveXXXX:				 ;сохраняет экран в буфер (ES)
+    197	    0142  B8 B800			 mov ax,0B800h
+    198	    0145  8E D8				 mov ds,ax
+    199	    0147  EB 05				 jmp short MoveScreens
+    200
+    201	    0149			 RestoreXXXX:				 ;восстанавливает экран	из буфера (DS)
+    202	    0149  B8 B800			 mov ax,0B800h
+    203	    014C  8E C0				 mov es,ax
+    204
+    205	    014E			 MoveScreens:
+    206	    014E  33 FF				 xor di,di
+    207	    0150  33 F6				 xor si,si
+    208	    0152  B9 07D0			 mov cx,2000
+    209	    0155  F3> A5			 rep movsw
+    210	    0157  C3				 ret
+    211
+    212	    0158			 SaveUser:			 ;сохраняет экран в пользовательском буфере
+    213	    0158  E8 0000e			 call MouseHide
+    214	    015B  8E 06	0083r			 mov es,UserBuf
+    215	    015F  BB 00A9r			 lea bx,UserCaretPos
+    216	    0162  EB 0A				 jmp short SaveIt
+    217
+    218	    0164			 SaveSelf:			 ;сохраняет экран в буфере программы
+    219	    0164  E8 0000e			 call MouseHide
+    220	    0167  8E 06	0085r			 mov es,selfBuf
+    221	    016B  BB 00ABr			 lea bx,SelfCaretPos
+    222	    016E			 SaveIt:
+    223	    016E  1E				 push ds
+    224	    016F  E8 FFD0			 call SaveXXXX
+    225	    0172  1F				 pop ds
+    226	    0173  E8 0000e			 call WhereXY
+    227	    0176  89 17				 mov [bx],dx
+    228	    0178  E8 0000e			 call MouseShow
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 5
+m.ASM
+
+
+
+    229	    017B  C3				 ret
+    230
+    231	    017C			 RestoreSelf:			 ;восстанавливает экран	программы
+    232	    017C  E8 0000e			 call MouseHide
+    233	    017F  E8 FFD6			 call SaveUser		 ;предварительно сохраняем экран польэователя
+    234	    0182  1E				 push ds
+    235	    0183  8E 1E	0085r			 mov ds,selfBuf
+    236	    0187  BB 00ABr			 lea bx,SelfCaretPos
+    237	    018A  EB 0E				 jmp short RestoreIt
+    238
+    239	    018C			 RestoreUser:			 ;восстанавливает пользовательский экран
+    240	    018C  E8 0000e			 call MouseHide
+    241	    018F  E8 FFD2			 call SaveSelf		 ;предварительно сохраняем экран программы
+    242	    0192  1E				 push ds
+    243	    0193  8E 1E	0083r			 mov ds,userBuf
+    244	    0197  BB 00A9r			 lea bx,UserCaretPos
+    245
+    246	    019A			 RestoreIt:
+    247	    019A  E8 FFAC			 call RestoreXXXX
+    248	    019D  1F				 pop ds
+    249	    019E  8B 17				 mov dx,[bx]		 ;DX-адрес сохранённого	знач.положения курсора
+    250	    01A0  E8 0000e			 call GotoXY
+    251	    01A3  E8 0000e			 call MouseShow
+    252	    01A6  C3				 ret
+    253
+    254	    01A7			 UserScreen:
+    255	    01A7  E8 FFE2			 call RestoreUser
+    256	    01AA  E8 0000e			 call ReadKey
+    257	    01AD  E8 FFCC			 call RestoreSelf
+    258	    01B0  C3				 ret
+    259
+    260	    01B1			 UpdateFileName:
+    261	    01B1  BA 0121			 mov dx,0121h
+    262	    01B4  B8 1FCD			 mov ax,1FCDh
+    263	    01B7  B9 000D			 mov cx,13
+    264	    01BA  E8 0000e			 call FillWord
+    265	    01BD  BE 0087r			 lea si,file1
+    266	    01C0  B9 000D			 mov cx,13
+    267	    01C3  B0 14				 mov al,14h
+    268	    01C5  F9				 stc
+    269	    01C6  E8 0000e			 call OutDB
+    270	    01C9  C3				 ret
+    271
+    272	    01CA			 UpdateMemory:			 ;обновляет индикатор количества памяти
+    273	    01CA  BB FFFF			 mov bx,0FFFFh
+    274	    01CD  E8 0000e			 call GetMem
+    275	    01D0  8B C3				 mov ax,bx
+    276	    01D2  BB 0010			 mov bx,16
+    277	    01D5  F7 E3				 mul bx			 ;DX:AX-число байт
+    278	    01D7  50				 push ax
+    279	    01D8  66| 8B C2			 mov eax,edx
+    280	    01DB  66| C1 E0 10			 shl eax,16
+    281	    01DF  58				 pop ax
+    282	    01E0  BE 0095r			 lea si,indic
+    283	    01E3  E8 0000e			 call Val
+    284	    01E6  BA 0048			 mov dx,0048h
+    285	    01E9  51				 push cx
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 6
+m.ASM
+
+
+
+    286	    01EA  B9 0007			 mov cx,7
+    287	    01ED  B8 7420			 mov ax,7420h
+    288	    01F0  E8 0000e			 call FillWord
+    289	    01F3  59				 pop cx
+    290	    01F4  E8 0000e			 call OutDB
+    291	    01F7  C3				 ret
+    292					 end
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 7
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "23/04/03"
+??FILENAME			  Text	 "m	  "
+??TIME				  Text	 "16:38:00"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0F0FH
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 M
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+BUF				  Word	 _TEXT:---- Extern
+BUFSIZE				  Word	 _TEXT:---- Extern
+BUTTON				  Near	 _TEXT:---- Extern
+BYTE1				  Byte	 DGROUP:00AD
+BYTE2				  Byte	 DGROUP:00AE
+CARETHIDE			  Near	 _TEXT:---- Extern
+CARETSHOW			  Near	 _TEXT:---- Extern
+CHANGEATRIBUT			  Near	 _TEXT:---- Extern
+CLEARFILENAME			  Near	 _TEXT:0000
+CLEARWORKAREA			  Near	 _TEXT:00DB
+CURX				  Word	 _TEXT:---- Extern
+CURY				  Word	 _TEXT:---- Extern
+FILE				  Byte	 DGROUP:0088
+FILE1				  Byte	 DGROUP:0087
+FILETMP				  Byte	 DGROUP:---- Extern
+FILLBACKBLOCK			  Near	 _TEXT:---- Extern
+FILLBYTE			  Near	 _TEXT:---- Extern
+FILLWORD			  Near	 _TEXT:---- Extern
+FIRSTLINE			  Word	 _TEXT:---- Extern
+GETBLOCK			  Near	 _TEXT:---- Extern
+GETCURY				  Near	 _TEXT:---- Extern
+GETMEM				  Near	 _TEXT:---- Extern
+GOTOXY				  Near	 _TEXT:---- Extern
+HANDLERPTR			  Word	 DGROUP:---- Extern
+HANDLERSTD			  Near	 _TEXT:---- Extern
+INDIC				  Byte	 DGROUP:0095
+INIT				  Near	 _TEXT:00F0
+INITPTR				  Word	 DGROUP:---- Extern
+INITSTD				  Near	 _TEXT:---- Extern
+LEN				  Near	 _TEXT:---- Extern
+MBH600				  Near	 _TEXT:0052
+MBI400				  Near	 _TEXT:001F
+MBI500				  Near	 _TEXT:0044
+MEMORY				  Byte	 DGROUP:00A0
+MENU				  Byte	 DGROUP:0000
+MOUSEHIDE			  Near	 _TEXT:---- Extern
+MOUSESHOW			  Near	 _TEXT:---- Extern
+MOVESCREENS			  Near	 _TEXT:014E
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 8
+Symbol Table
+
+
+
+MSGBOX				  Near	 _TEXT:0053
+MSGBOXHANDLER			  Near	 _TEXT:004F
+MSGBOXINIT			  Near	 _TEXT:000D
+MSGOK				  Byte	 DGROUP:---- Extern
+OUTDB				  Near	 _TEXT:---- Extern
+OUTDW				  Near	 _TEXT:---- Extern
+OUTSTR				  Near	 _TEXT:---- Extern
+PARSESTR			  Near	 _TEXT:---- Extern
+PUTBLOCK			  Near	 _TEXT:---- Extern
+READKEY				  Near	 _TEXT:---- Extern
+RESTOREIT			  Near	 _TEXT:019A
+RESTORESELF			  Near	 _TEXT:017C
+RESTOREUSER			  Near	 _TEXT:018C
+RESTOREXXXX			  Near	 _TEXT:0149
+SAVEIT				  Near	 _TEXT:016E
+SAVESELF			  Near	 _TEXT:0164
+SAVEUSER			  Near	 _TEXT:0158
+SAVEXXXX			  Near	 _TEXT:0142
+SELFBUF				  Word	 DGROUP:0085
+SELFCARETPOS			  Word	 DGROUP:00AB
+SHADOW				  Near	 _TEXT:---- Extern
+STAT				  Byte	 DGROUP:0035
+UPDATECARETPOS			  Near	 _TEXT:0094
+UPDATEFILENAME			  Near	 _TEXT:01B1
+UPDATEMEMORY			  Near	 _TEXT:01CA
+USERBUF				  Word	 DGROUP:0083
+USERCARETPOS			  Word	 DGROUP:00A9
+USERSCREEN			  Near	 _TEXT:01A7
+VAL				  Near	 _TEXT:---- Extern
+WHEREXY				  Near	 _TEXT:---- Extern
+WIN2				  Near	 _TEXT:---- Extern
+WINDOW				  Near	 _TEXT:---- Extern
+X				  Byte	 _TEXT:---- Extern
+Y				  Byte	 _TEXT:---- Extern
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  00AF Word	  Public  DATA
+_TEXT				  16  01F8 Word	  Public  CODE
+

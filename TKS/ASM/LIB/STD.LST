@@ -1,0 +1,234 @@
+Turbo Assembler	 Version 4.1	    04/09/96 22:15:29	    Page 1
+std.ASM
+
+
+
+      1					 ;	 модуль	с процедурами файлового	ввода вывода
+      2					 ;	 (c) Copyright 2002 by Sokolov Artem
+      3					 ;	 дата создания:	    07.12.02
+      4
+      5	    0000			 .model	small,pascal
+      6	    0000			 .data
+      7	    0000  0000				 params	 dw	 0
+      8	    0002  ????????			 com	 dd	 ?
+      9	    0006  ????????				 dd	 ?
+     10	    000A  ????????				 dd	 ?
+     11	    000E  0000				 keep_ss dw	 0
+     12	    0010  0000				 keep_sp dw	 0
+     13	    0012  0000				 keep_ds dw	 0
+     14	    0014  2A 2E	2A 00			 path	 db	 '*.*',0 ;шаблон для поиска
+     15					 .386
+     16	    0018			 .code
+     17						 extrn EndProg:proc,IsAlpha:proc
+     18
+     19					 PUBLIC	Exec,InitExe,FreeMem,GetMem,GetCurDrive,SetCurDir,GetCurDir,CopyFiles
+     20
+     21	    0000			 Exec:					 ;DI-командная строка
+     22	    0000  57				 push di			 ;сохранили смещение имени файла
+     23	    0001  B0 00				 mov al,0			 ;теперь надо найти смещение ком.строки
+     24	    0003  1E				 push ds
+     25	    0004  07				 pop es
+     26	    0005  B9 003F			 mov cx,63
+     27	    0008  FC				 cld
+     28	    0009  F2> AE			 repne scasb			 ;ищем начало имени запускаемого файла
+     29	    000B  57				 push di
+     30	    000C  5E				 pop si				 ;SI-командная строка
+     31	    000D  5F				 pop di				 ;DI-имя запускаемого файла
+     32	    000E  8C 1E	0012r			 mov keep_ds,ds				 ;сохраняем DS вызывающей проги
+     33	    0012  B8 0000s			 mov ax,@data
+     34	    0015  8E D8				 mov ds,ax
+     35	    0017  89 36	0002r			 mov word ptr com,offset si
+     36	    001B  C7 06	0004r 0000s		 mov word ptr com+2,seg	si
+     37	    0021  B8 0000s			 mov ax,seg params
+     38	    0024  8E C0				 mov es,ax
+     39	    0026  BB 0000r			 mov bx,offset params
+     40	    0029  8C 16	000Er			 mov keep_ss,ss
+     41	    002D  89 26	0010r			 mov keep_sp,sp
+     42	    0031  8B D7				 mov dx,offset di
+     43	    0033  B8 0000s			 mov ax,seg di
+     44	    0036  8E D8				 mov ds,ax
+     45	    0038  B4 4B				 mov ah,4bh
+     46	    003A  B0 00				 mov al,0
+     47	    003C  CD 21				 int 21h
+     48	    003E  8E 16	000Er			 mov ss,keep_ss
+     49	    0042  8B 26	0010r			 mov sp,keep_sp
+     50	    0046  8E 1E	0012r			 mov ds,keep_ds
+     51	    004A  C3				 ret
+     52
+     53	    004B			 InitExe:
+     54	    004B  B8 0000s			 mov ax,@data
+     55	    004E  8E D8				 mov ds,ax
+     56	    0050  0E E8	0000e			 call far ptr EndProg
+     57	    0054  8C C3				 mov bx,es
+Turbo Assembler	 Version 4.1	    04/09/96 22:15:29	    Page 2
+std.ASM
+
+
+
+     58	    0056  2B D8				 sub bx,ax
+     59	    0058  F7 DB				 neg bx
+     60	    005A  B4 4A				 mov ah,4ah
+     61	    005C  CD 21				 int 21h
+     62	    005E  C3				 ret
+     63
+     64	    005F			 FreeMem:			 ;ES-сегмент освобождаемого блока памяти
+     65	    005F  B4 49				 mov ah,49h
+     66	    0061  CD 21				 int 21h
+     67	    0063  C3				 ret
+     68
+     69	    0064			 GetMem:			 ;в BX - число требуемых параграфов
+     70	    0064  B4 48				 mov ah,48h
+     71	    0066  CD 21				 int 21h
+     72	    0068  C3				 ret
+     73
+     74	    0069			 GetCurDrive:			 ;накопительпо умолчанию в AL номер (0-A,2-C...)
+     75	    0069  B4 19				 mov ah,19h
+     76	    006B  CD 21				 int 21h
+     77	    006D  C3				 ret
+     78
+     79	    006E			 SetCurDir:			 ;DS:DX-путь к строке с	каталогом
+     80	    006E  B4 3B				 mov ah,3bh
+     81	    0070  CD 21				 int 21h
+     82	    0072  C3				 ret
+     83
+     84	    0073			 GetCurDir:			 ;DS:SI-буфер 64 байта
+     85	    0073  56				 push si
+     86	    0074  E8 FFF2			 call GetCurDrive
+     87	    0077  04 41				 add al,41h		 ;преобразуем в	букву
+     88	    0079  88 04				 mov [si],al
+     89	    007B  C6 44	01 3A			 mov byte ptr [si+1],':'
+     90	    007F  C6 44	02 5C			 mov byte ptr [si+2],'\'
+     91	    0083  83 C6	03			 add si,3
+     92	    0086  B4 47				 mov ah,47h
+     93	    0088  B2 00				 mov dl,0		 ;0-по умолчанию( 1-A,2-B,3-C и	т.д)
+     94	    008A  CD 21				 int 21h
+     95	    008C  5E				 pop si
+     96	    008D  C3				 ret
+     97
+     98	    008E			 CanICopy:				 ;возвращает CF=1 если копировать нельзя
+     99	    008E  26: 80 3E 0095 10		 cmp byte ptr es:[0095h],10h	 ;байт атрибутов в DTA
+    100	    0094  0F 94	C0			 sete al			 ;если это каталог,AL=1
+    101	    0097  83 FB	02			 cmp bx,2			 ;это первый проход?(di	= 3)
+    102	    009A  0F 94	C4			 sete ah			 ;если да-AL = 1
+    103	    009D  02 C4				 add al,ah			 ;копировать можно,если	AL=0 или 2
+    104	    009F  3C 01				 cmp al,1
+    105	    00A1  74 02				 je short CIC100		 ;копировать нельзя!!!
+    106	    00A3  F8				 clc
+    107	    00A4  C3				 ret
+    108	    00A5  F9			 CIC100: stc
+    109	    00A6  C3				 ret
+    110
+    111	    00A7			 CopyFiles:			 ;копирует все файлы текущего в	FS:000E
+    112						 ;на первом проходе копирует все каталоги,на втором-файлы
+    113	    00A7  52 53	56 57			 push dx bx si di
+    114	    00AB  BF 000E			 mov di,14			 ;смещение в этом буфере
+Turbo Assembler	 Version 4.1	    04/09/96 22:15:29	    Page 3
+std.ASM
+
+
+
+    115	    00AE  B4 2F				 mov ah,2FH
+    116	    00B0  CD 21				 int 21h			 ;получить текущюю DTA	ES:BX
+    117	    00B2  BB 0002			 mov bx,2			 ;сканировать за два прохода(не	3!!!)
+    118	    00B5			 CF100:					 ;главный цикл
+    119	    00B5  B4 4E				 mov ah,4eH
+    120	    00B7  BA 0014r			 lea dx,path
+    121	    00BA  CD 21				 int 21h			 ;ищем первый файл
+    122	    00BC  72 2E				 jc short CF400			 ;не нашли
+    123	    00BE  E8 FFCD			 call CanICopy
+    124	    00C1  72 31				 jc short CF500			 ;в этом проходе копировать нельзя
+    125	    00C3  33 ED				 xor bp,bp			 ;счетчик файлов
+    126	    00C5  BE 009E			 mov si,9Eh			 ;SI-смещение имени файла в DTA
+    127	    00C8			 CF200:
+    128	    00C8  45				 inc bp					 ;
+    129	    00C9  26: AC		 CF300:	 lods byte ptr es:[si]
+    130	    00CB  3C 2E				 cmp al,2Eh
+    131	    00CD  75 0E				 jne short CF360
+    132	    00CF  83 FF	0E			 cmp di,14				 ;DI-на	начало буфера в	FS ?
+    133	    00D2  75 09				 jne short CF360
+    134	    00D4  26: 80 3C 2E			 cmp byte ptr es:[si],2Eh
+    135	    00D8  74 03				 je short CF360				 ;это вторая точка-оставить
+    136	    00DA  4D				 dec bp
+    137	    00DB  EB 17				 jmp short CF500			 ;это первая точка-пропустить
+    138	    00DD			 CF360:
+    139	    00DD  26: 80 3E 0095 10		 cmp byte ptr es:[0095h],10h		 ;это каталог?
+    140	    00E3  74 07				 je short CF400				 ;регистр каталога не менять
+    141	    00E5  E8 0000e			 call IsAlpha
+    142	    00E8  73 02				 jnc short CF400			 ;это не буква
+    143	    00EA  04 20				 add al,20h
+    144	    00EC  64: 88 05		 CF400:	 mov byte ptr fs:[di],al
+    145	    00EF  47				 inc di
+    146	    00F0  0A C0				 or al,al
+    147	    00F2  75 D5				 jne short CF300
+    148	    00F4			 CF500:
+    149	    00F4  BA 0014r			 lea dx,path
+    150	    00F7  B4 4F				 mov ah,4fh
+    151	    00F9  CD 21				 int 21h				 ;искать следующий файл
+    152	    00FB  BE 009E			 mov si,9Eh				 ;BX-смещение имени файла в DTA
+    153	    00FE  72 07				 jc short CF600
+    154	    0100  E8 FF8B			 call CanICopy
+    155	    0103  72 EF				 jc short CF500
+    156	    0105  EB C1				 jmp short CF200
+    157	    0107			 CF600:
+    158	    0107  4B				 dec bx					 ;счетчик проходов
+    159	    0108  75 AB				 jnz short CF100			 ;это был первый проход
+    160	    010A  64: 89 2E 000C		 mov word ptr fs:[0012],bp			 ;количество файлов
+    161	    010F  5F 5E	5B 5A			 pop di	si bx dx
+    162	    0113  C3				 ret
+    163					 end
+Turbo Assembler	 Version 4.1	    04/09/96 22:15:29	    Page 4
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "04/09/96"
+??FILENAME			  Text	 "std	  "
+??TIME				  Text	 "22:15:29"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0F0FH
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 STD
+@INTERFACE			  Text	 004H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+CANICOPY			  Near	 _TEXT:008E
+CF100				  Near	 _TEXT:00B5
+CF200				  Near	 _TEXT:00C8
+CF300				  Near	 _TEXT:00C9
+CF360				  Near	 _TEXT:00DD
+CF400				  Near	 _TEXT:00EC
+CF500				  Near	 _TEXT:00F4
+CF600				  Near	 _TEXT:0107
+CIC100				  Near	 _TEXT:00A5
+COM				  Dword	 DGROUP:0002
+COPYFILES			  Near	 _TEXT:00A7
+ENDPROG				  Near	 _TEXT:---- Extern
+EXEC				  Near	 _TEXT:0000
+FREEMEM				  Near	 _TEXT:005F
+GETCURDIR			  Near	 _TEXT:0073
+GETCURDRIVE			  Near	 _TEXT:0069
+GETMEM				  Near	 _TEXT:0064
+INITEXE				  Near	 _TEXT:004B
+ISALPHA				  Near	 _TEXT:---- Extern
+KEEP_DS				  Word	 DGROUP:0012
+KEEP_SP				  Word	 DGROUP:0010
+KEEP_SS				  Word	 DGROUP:000E
+PARAMS				  Word	 DGROUP:0000
+PATH				  Byte	 DGROUP:0014
+SETCURDIR			  Near	 _TEXT:006E
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0018 Word	  Public  DATA
+_TEXT				  16  0114 Word	  Public  CODE
+

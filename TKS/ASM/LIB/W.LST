@@ -1,0 +1,331 @@
+Turbo Assembler	 Version 4.1	    04/09/96 17:12:15	    Page 1
+w.ASM
+
+
+
+      1	    0000			 .model	small			 ;  дата создания :12.12.02.
+      2					 .386
+      3	    0000			 .data
+      4					 extrn buf:word
+      5	    0000  ??				   ver	 db ?
+      6	    0001  ??				   hor	 db ?
+      7	    0002  ??				   ulf	 db ?
+      8	    0003  ??				   urt	 db ?
+      9	    0004  ??				   dlf	 db ?
+     10	    0005  ??				   drt	 db ?
+     11	    0006			 .code
+     12
+     13					 ;изменяет байт	атрибутов прямоугольной	области	экрана в соответствии с	маской
+     14					 ;байт атрибутов подвергается операции AND c байтом в AL и операции OR с AH
+     15					 PUBLIC	ChangeAtribut,Shadow,Win1,Win2,PutBlock,GetBlock,FillBackBlock,GetStart
+     16
+     17	    0000			 ChangeAtribut:			 ;в DX верхний левый угол,в BH-высота,BL-длина
+     18	    0000  56 57	52 53 1E 51		 push si di dx bx ds cx	 ;байт атрибутов AND AL	+ байт атрибутов OR AH
+     19	    0006  E8 007B			 call GetStart		 ;настраиваем DI и ES в	соответсвии с DX
+     20	    0009  8B D0				 mov dx,ax		 ;сохраняем маску изменения атрибутов
+     21	    000B  57				 push di
+     22	    000C  5E				 pop si			 ;
+     23	    000D  06				 push es
+     24	    000E  1F				 pop ds			 ;сегмент источника-видеопамять
+     25	    000F			 CA200:
+     26	    000F  33 C9				 xor cx,cx
+     27	    0011  8A CB				 mov cl,bl		 ;длина	очередной строки
+     28	    0013  E3 1F				 jcxz CA400
+     29	    0015			 CA300:
+     30	    0015  AD				 lodsw				 ;загрузили слово из видеопамяти
+     31	    0016  22 E2				 and ah,dl			 ;изменяем байт	атрибутов в соотв.
+     32	    0018  0A E6				 or ah,dh			 ;с маской
+     33	    001A  AB				 stosw				 ;сохранили измененное слово
+     34	    001B  E2 F8				 loop CA300
+     35	    001D  FE CF				 dec bh				 ;счетчик строк	прямоуг.участка	экрана
+     36	    001F  80 FF	00			 cmp bh,0
+     37	    0022  74 10				 je short CA400
+     38	    0024  81 C7	00A0			 add di,160			 ;переход к следующей строке экрана
+     39	    0028  33 C9				 xor cx,cx
+     40	    002A  8A CB				 mov cl,bl
+     41	    002C  2B F9				 sub di,cx
+     42	    002E  2B F9				 sub di,cx
+     43	    0030  57				 push di
+     44	    0031  5E				 pop si
+     45	    0032  EB DB				 jmp short CA200
+     46	    0034  59			 CA400:	 pop cx
+     47	    0035  E9 00A1			 jmp GB200
+     48
+     49	    0038			 Shadow:			 ;в DX верхний левый угол,в BH-высота,BL-длина
+     50	    0038  56 57	52 53			 push si di dx bx
+     51	    003C  FE C6				 inc dh
+     52	    003E  02 D3				 add dl,bl
+     53	    0040  B3 02				 mov bl,2
+     54	    0042  B8 000F			 mov ax,000fh
+     55	    0045  E8 FFB8			 call ChangeAtribut
+     56	    0048  5B				 pop bx
+     57	    0049  5A				 pop dx
+Turbo Assembler	 Version 4.1	    04/09/96 17:12:15	    Page 2
+w.ASM
+
+
+
+     58	    004A  52				 push dx
+     59	    004B  53				 push bx
+     60	    004C  80 C2	02			 add dl,2
+     61	    004F  02 F7				 add dh,bh
+     62	    0051  B7 01				 mov bh,1
+     63	    0053  80 EB	02			 sub bl,2
+     64	    0056  B8 000F			 mov ax,000fh
+     65	    0059  E8 FFA4			 call ChangeAtribut
+     66	    005C  EB 7C				 jmp short GB300
+     67
+     68					 ;заполняет словом прямоугольный участок видеопамяти
+     69
+     70	    005E			 FillBackBlock:			 ;в DX верхний левый угол,в BH-высота,BL-длина
+     71	    005E  56 57	52 53 51		 push si di dx bx cx	 ;в AX-байт атрибутов+символьный байт
+     72	    0063  E8 001E			 call GetStart
+     73	    0066  8A F7				 mov dh,bh		 ;число	столбцов участка экрана
+     74	    0068  B7 00				 mov bh,0
+     75	    006A			 FBB100:			 ;цикл по столбцам участка экрана
+     76	    006A  33 C9				 xor cx,cx
+     77	    006C  8A CB				 mov cl,bl		 ;длина	участка
+     78	    006E  F3> AB			 rep stosw		 ;вывели строку
+     79	    0070  FE CE				 dec dh			 ;уменьшить счетчик строк
+     80	    0072  80 FE	00			 cmp dh,0
+     81	    0075  74 0A				 je short FBB200	 ;вывели все строки
+     82	    0077  81 C7	00A0			 add di,160		 ;перейти к следующей строке участка экрана
+     83	    007B  2B FB				 sub di,bx
+     84	    007D  2B FB				 sub di,bx
+     85	    007F  EB E9				 jmp short FBB100
+     86	    0081  59			 FBB200: pop cx
+     87	    0082  EB 56				 jmp short GB300
+     88
+     89					 ;настраивает ES:DI на смещение	точки DH,DL (Y,X) в видеопамяти
+     90
+     91	    0084			 GetStart:			 ;в DX - верхний угол
+     92	    0084  50 51	52			 push ax cx dx		 ;команда MUL портит DX	!?
+     93	    0087  B8 B800			 mov ax,0B800h
+     94	    008A  8E C0				 mov es,ax		 ;настройка сегмента приемника-видеопамять
+     95	    008C  33 C0				 xor ax,ax
+     96	    008E  8A C6				 mov al,dh		 ;y верхний левый угол
+     97	    0090  B9 00A0			 mov cx,160
+     98	    0093  F7 E1				 mul cx
+     99	    0095  5A				 pop dx			 ;восстанавливаем DL
+    100	    0096  33 C9				 xor cx,cx
+    101	    0098  8A CA				 mov cl,dl
+    102	    009A  03 C1				 add ax,cx
+    103	    009C  03 C1				 add ax,cx
+    104	    009E  8B F8				 mov di,ax		 ;в DI возвращает смещение этого угла
+    105	    00A0  59 58				 pop cx	ax
+    106	    00A2  FC				 cld			 ;как правило,после вызова GetStart-строк.опер.
+    107	    00A3  C3				 ret
+    108
+    109	    00A4			 GetBlock:			 ;копирует в буфер участок экрана
+    110	    00A4  56 57	52 53 1E 50		 push si di dx bx ds ax	 ;AX-сегмент буфера приемника
+    111	    00AA  FE C7				 inc bh			 ;DX-верхний левый угол,в BH-высота,BL-длина
+    112	    00AC  80 C3	02			 add bl,2
+    113	    00AF  B8 B800			 mov ax,0B800h
+    114	    00B2  8E D8				 mov ds,ax		 ;настройка источника
+Turbo Assembler	 Version 4.1	    04/09/96 17:12:15	    Page 3
+w.ASM
+
+
+
+    115	    00B4  E8 FFCD			 call GetStart		 ;
+    116	    00B7  07				 pop es			 ;буфер	приемника
+    117	    00B8  87 F7				 xchg si,di
+    118	    00BA  BF 0000			 mov di,0
+    119	    00BD  33 C0				 xor ax,ax
+    120	    00BF  8A C7				 mov al,bh		 ;число	столбцов участка экрана
+    121	    00C1  B7 00				 mov bh,0
+    122	    00C3			 GB100:				 ;цикл по строкам участка экрана
+    123	    00C3  33 C9				 xor cx,cx
+    124	    00C5  8A CB				 mov cl,bl
+    125	    00C7  F3> A5			 rep movsw		 ;переслали очередную строку экрана в буфер
+    126	    00C9  48				 dec ax
+    127	    00CA  3D 0000			 cmp ax,0
+    128	    00CD  74 0A				 je short GB200		 ;скопировали весь участок экрана
+    129	    00CF  81 C6	00A0			 add si,160		 ;перейти к следующей строке участка экрана
+    130	    00D3  2B F3				 sub si,bx
+    131	    00D5  2B F3				 sub si,bx
+    132	    00D7  EB EA				 jmp short GB100
+    133	    00D9  1F			 GB200:	 pop ds
+    134	    00DA  5B 5A	5F 5E		 GB300:	 pop bx	dx di si
+    135	    00DE  C3				 ret
+    136
+    137	    00DF			 PutBlock:			 ;копирует буфер в видеопамять
+    138	    00DF  56 57	52 53 1E		 push si di dx bx ds		 ;AX-сегмент буфера приемника
+    139	    00E4  FE C7				 inc bh			 ;DX-верхний левый угол,в BH-высота,BL-длина
+    140	    00E6  80 C3	02			 add bl,2
+    141	    00E9  8E D8				 mov ds,ax		 ;buffer
+    142	    00EB  BE 0000			 mov si,0
+    143	    00EE  E8 FF93			 call GetStart		 ;
+    144	    00F1  33 C0				 xor ax,ax
+    145	    00F3  8A C7				 mov al,bh		 ;число	столбцов участка экрана
+    146	    00F5  B7 00				 mov bh,0
+    147	    00F7			 PB100:				 ;цикл по строкам участка экрана
+    148	    00F7  33 C9				 xor cx,cx
+    149	    00F9  8A CB				 mov cl,bl
+    150	    00FB  F3> A5			 rep movsw		 ;переслали очередную строку экрана в буфер
+    151	    00FD  48				 dec ax
+    152	    00FE  3D 0000			 cmp ax,0
+    153	    0101  74 D6				 je short GB200		 ;скопировали весь участок экрана
+    154	    0103  81 C7	00A0			 add di,160		 ;перейти к следующей строке участка экрана
+    155	    0107  2B FB				 sub di,bx
+    156	    0109  2B FB				 sub di,bx
+    157	    010B  EB EA				 jmp short PB100
+    158
+    159	    010D  56			 Win1:	 push si		 ;требует в DH-y1,DL-x1,BH-высота,BL-длина
+    160	    010E  9C				 pushf			 ;сохраняем флаг CF-признак кнопки
+    161	    010F  C6 06	0000r B3		 mov ver,179
+    162	    0114  C6 06	0001r C4		 mov hor,196
+    163	    0119  C6 06	0002r DA		 mov ulf,218
+    164	    011E  C6 06	0003r BF		 mov urt,191
+    165	    0123  C6 06	0004r C0		 mov dlf,192
+    166	    0128  C6 06	0005r D9		 mov drt,217
+    167	    012D  EB 2C				 jmp short W300
+    168	    012F  56			 Win2:	 push si
+    169	    0130  9C				 pushf			 ;сохраняем флаг CF-признак кнопки
+    170	    0131  C6 06	0000r BA		 mov ver,186
+    171	    0136  C6 06	0001r CD		 mov hor,205
+Turbo Assembler	 Version 4.1	    04/09/96 17:12:15	    Page 4
+w.ASM
+
+
+
+    172	    013B  C6 06	0002r C9		 mov ulf,201
+    173	    0140  C6 06	0003r BB		 mov urt,187
+    174	    0145  C6 06	0004r C8		 mov dlf,200
+    175	    014A  C6 06	0005r BC		 mov drt,188
+    176	    014F  80 FF	03			 cmp bh,3
+    177	    0152  72 7A	90 90			 jb W800			 ;слишком маленькая высота
+    178	    0156  80 FB	03			 cmp bl,3
+    179	    0159  72 73				 jb short W800				 ;слишком маленькая длина
+    180	    015B			 W300:
+    181	    015B  E8 FF26			 call GetStart
+    182	    015E  A0 0002r			 mov al,ulf
+    183	    0161  AA				 stosb
+    184	    0162  47				 inc di
+    185	    0163  A0 0001r			 mov al,hor
+    186	    0166  33 C9				 xor cx,cx
+    187	    0168  8A CB				 mov cl,bl
+    188	    016A  80 E9	02			 sub cl,2
+    189	    016D			 W400:
+    190	    016D  AA				 stosb
+    191	    016E  47				 inc di
+    192	    016F  E2 FC				 loop W400
+    193	    0171  A0 0003r			 mov al,urt
+    194	    0174  AA				 stosb
+    195	    0175  81 C7	009F			 add di,159
+    196	    0179  A0 0000r			 mov al,ver
+    197	    017C  8A CF				 mov cl,bh
+    198	    017E  80 E9	02			 sub cl,2
+    199	    0181			 W500:
+    200	    0181  AA				 stosb
+    201	    0182  81 C7	009F			 add di,159
+    202	    0186  E2 F9				 loop W500
+    203	    0188  A0 0005r			 mov al,drt
+    204	    018B  FD				 std
+    205	    018C  AA				 stosb
+    206	    018D  4F				 dec di
+    207	    018E  8A CB				 mov cl,bl
+    208	    0190  80 E9	02			 sub cl,2
+    209	    0193  A0 0001r			 mov al,hor
+    210	    0196			 W600:
+    211	    0196  AA				 stosb
+    212	    0197  4F				 dec di
+    213	    0198  E2 FC				 loop W600
+    214	    019A  A0 0004r			 mov al,dlf
+    215	    019D  AA				 stosb
+    216	    019E  A0 0000r			 mov al,ver
+    217	    01A1  8A CF				 mov cl,bh
+    218	    01A3  80 E9	02			 sub cl,2
+    219	    01A6			 W700:
+    220	    01A6  81 EF	009F			 sub di,159
+    221	    01AA  AA				 stosb
+    222	    01AB  E2 F9				 loop W700
+    223	    01AD  9D				 popf				 ;вынимаем флаг	CF-признак кнопки
+    224	    01AE  72 1E				 jc short W800
+    225	    01B0  81 EF	009B			 sub di,155
+    226	    01B4  B0 5B				 mov al,5Bh			 ; открывающая скобка
+    227	    01B6  FC				 cld
+    228	    01B7  AA				 stosb
+Turbo Assembler	 Version 4.1	    04/09/96 17:12:15	    Page 5
+w.ASM
+
+
+
+    229	    01B8  1E				 push ds
+    230	    01B9  B8 B800			 mov ax,0B800h
+    231	    01BC  8E D8				 mov ds,ax
+    232	    01BE  47				 inc di
+    233	    01BF  8B C7				 mov ax,di
+    234	    01C1  8B F0				 mov si,ax
+    235	    01C3  AD				 lodsw				 ;слово
+    236	    01C4  80 E4	FA			 and ah,11111010B		 ;зеленый цвет кнопки
+    237	    01C7  B0 FE				 mov al,0FEh			 ;кнопка
+    238	    01C9  AB				 stosw
+    239	    01CA  B0 5D				 mov al,5Dh			 ;закрыв.скобка
+    240	    01CC  AA				 stosb
+    241	    01CD  1F				 pop ds
+    242	    01CE  5E			 W800:	 pop si
+    243	    01CF  C3				 ret
+    244
+    245					 end
+Turbo Assembler	 Version 4.1	    04/09/96 17:12:15	    Page 6
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "04/09/96"
+??FILENAME			  Text	 "w	  "
+??TIME				  Text	 "17:12:15"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0F0FH
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 W
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+BUF				  Word	 DGROUP:---- Extern
+CA200				  Near	 _TEXT:000F
+CA300				  Near	 _TEXT:0015
+CA400				  Near	 _TEXT:0034
+CHANGEATRIBUT			  Near	 _TEXT:0000
+DLF				  Byte	 DGROUP:0004
+DRT				  Byte	 DGROUP:0005
+FBB100				  Near	 _TEXT:006A
+FBB200				  Near	 _TEXT:0081
+FILLBACKBLOCK			  Near	 _TEXT:005E
+GB100				  Near	 _TEXT:00C3
+GB200				  Near	 _TEXT:00D9
+GB300				  Near	 _TEXT:00DA
+GETBLOCK			  Near	 _TEXT:00A4
+GETSTART			  Near	 _TEXT:0084
+HOR				  Byte	 DGROUP:0001
+PB100				  Near	 _TEXT:00F7
+PUTBLOCK			  Near	 _TEXT:00DF
+SHADOW				  Near	 _TEXT:0038
+ULF				  Byte	 DGROUP:0002
+URT				  Byte	 DGROUP:0003
+VER				  Byte	 DGROUP:0000
+W300				  Near	 _TEXT:015B
+W400				  Near	 _TEXT:016D
+W500				  Near	 _TEXT:0181
+W600				  Near	 _TEXT:0196
+W700				  Near	 _TEXT:01A6
+W800				  Near	 _TEXT:01CE
+WIN1				  Near	 _TEXT:010D
+WIN2				  Near	 _TEXT:012F
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0006 Word	  Public  DATA
+_TEXT				  16  01D0 Word	  Public  CODE
+

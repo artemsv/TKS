@@ -1,0 +1,150 @@
+  File  Edit  Search  Run  Assemble  Debug  Tools  Options  Window  Help   14 42
+ÉÍ[ş]ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ Help ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ[]Í»
+º                                                                              
+º  CPUID - Identify CPU  (486+) Ü                                              ş
+º  ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß                                              ±
+º                                                                              ±
+º  Usage:                                Opcode:                               ±
+º                                                                              ±
+º   CPUID                                 0Fh A2h                              ±
+º                                                                              ±
+º  Flags:  OF SF ZF AF PF CF TF IF DF NT RF                                    ±
+º  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ                                    ±
+º  state:  ??                                                                  ±
+º                                                                              ±
+º  CPUÿmode:  PM       RM      VM                                              ±
+º  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ                                    ±
+º  Faults:    ??                                                               ±
+º                                                                              ±
+º  Pairable: NP                                                                ±
+º                                                                              ±
+º Check on 80486 Flags register to see if the instruction is implemented.      ±
+º                                                                              ±
+º  Input  OutPut       Bit    Description                                      
+ÈÍş±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±ÄÙ
+ F1 Help on help  Alt+F1 Previous topic  Shift+F1 Help index
+  File  Edit  Search  Run  Assemble  Debug  Tools  Options  Window  Help   14 43
+ÉÍ[ş]ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ Help ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ[]Í»
+º  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ   
+º  EAX=0  EAX          31-0   highest identification level (actual 2)          ±
+º                                                                              ±
+º         EBX-EDX-ECX  95-0   12 chars ID string containing manufacturer       ±
+º                             ('GenuineIntel', 'UMC UMC UMC ',                 ±
+º                              'AuthenticAMD', 'CyrixInstead',                 ş
+º                              'NexGenDriven')                                 ±
+º                             in MSB order                                     ±
+º                                                                              ±
+º  EAX=1  EAX          3-0    Stepping                                         ±
+º                             586: P5  : 3 - B1, 5 - C1, 7 - D1                ±
+º                                  P54 : 1 - B1, 2 - B3, 4 - B5, 5 - C2/mA1,   ±
+º                                        B - cB1                               ±
+º                                  P24T: 1 - B1/B2, 2 - C0                     ±
+º                      7-4    Model                                            ±
+º                             Intel486: 0 - DX,  1 - DX50, 2 - SX, 3 - DX2     ±
+º                                       4 - SL,  5 - SX2,  7 - DX2WB,          ±
+º                                       8 - DX4, 9 - DX4WB                     ±
+º                             UMC486  : 1 - U5D, 2 - U5S                       ±
+º                             AMD486  : 3 - DX2, 7 - DX2WB, 8 - DX4, 9 - DX4WB ±
+º                             iPentium: 0 - 5V-60/66 MHz A-step chips,         
+ÈÍş±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±ÄÙ
+ F1 Help on help  Alt+F1 Previous topic  Shift+F1 Help index
+  File  Edit  Search  Run  Assemble  Debug  Tools  Options  Window  Help   14:44
+ÉÍ[ş]ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ Help ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ[]Í»
+º                                       1 - 5V-60/66 MHz,                      
+º                                       2 - 3.3V-75/90/100/120/133 MHz,        ±
+º                                       3 - P24T,                              ±
+º                                       4 - OverDrive for iPentium-3.3V,       ±
+º                                       5 - OverDrive for iDX4,                ±
+º                                       6 - OverDrive for iPentium-5V          ±
+º                             Nx586   : 0 - newer Nx586 or Nx586FPU            ±
+º                             iPentPro: 0 - iPentiumPro A-step chips,          ±
+º                                       1 - iPentiumPro,                       ±
+º                                       4 - P55CT iP54C socket OverDrive (drop ş
+º                      11-8   Family                                           ±
+º                             4 - 80486, 5 - 80586, 6 - P6                     ±
+º                      13-12  Type                                             ±
+º                             00 - 1st dual iPentium CPU (iP54C)               ±
+º                             01 - iPentium OverDrive processor                ±
+º                             10 - 2nd dual iPentium CPU (iP54C)               ±
+º                             11 - reserved                                    ±
+º                                                                              ±
+º         EDX            1    Coprocessor (1 - build-in (DX), 0 - external (SX ±
+º                        2    I/O hardware breakpoints (1=possible)            ±
+º                        3    Page Size (1=4 MByte, 0=4 KByte only)            
+ÈÍş±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±ÄÙ
+ F1 Help on help  Alt+F1 Previous topic  Shift+F1 Help index
+  File  Edit  Search  Run  Assemble  Debug  Tools  Options  Window  Help   14:44
+ÉÍ[ş]ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ Help ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ[]Í»
+º                        4    Time Stamp Counter (1=available)                 
+º                        5    Pentium compatible MSR's (1=build-in)            ±
+º                        6    reserved (36bit-addressing & 2MB-paging)         ±
+º                        7    Machine Check Exception (1=supported)            ±
+º                        8    CMPXCHG8B (1=implemented)                        ±
+º                        9    CPU contains a local APIC (iPentium-3V)          ±
+º                      11-10  reserved                                         ±
+º                       12    memory type range registers supported            ±
+º                       13    page global enable supported                     ±
+º                       14    machine check architecture supported             ±
+º                       15    CMOVcc, FCMOVcc, FCOMI supported                 ±
+º                      16-31  reserved (= 0)                                   ±
+º                                                                              ş
+º  EAX=2  AL=01h              configuration descriptors are valid              ±
+º         AL<>01h             reserved for future use                          ±
+º                                                                              ±
+º         EAX..EDX            4x4 8bit configuration descriptors               ±
+º                             00h - null descriptor (=unused descriptor)       ±
+º                             01h - code TLB, 4K pages, 4 ways, 64 entries     ±
+º                             02h - code TLB, 4M pages, 4 ways, 4 entries      ±
+º                             03h - data TLB, 4K pages, 4 ways, 64 entries     
+ÈÍş±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±ÄÙ
+ F1 Help on help  Alt+F1 Previous topic  Shift+F1 Help index
+  File  Edit  Search  Run  Assemble  Debug  Tools  Options  Window  Help   14:44
+ÉÍ[ş]ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ Help ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ[]Í»
+º                             04h - data TLB, 4M pages, 4 ways, 8 entries      
+º                             06h - code L1 cache, 8KB, 4 ways, 32 byte lines  ±
+º                             0Ah - data L1 cache, 8KB, 2 ways, 32 byte lines  ±
+º                             41h - c+d L2 cache, 128KB, 4 ways, 32 byte lines ±
+º                             42h - c+d L2 cache, 256KB, 4 ways, 32 byte lines ±
+º                             43h - c+d L2 cache, 512KB, 4 ways, 32 byte lines ±
+º                             xxh - other values are reserved for future use   ±
+º                             A descriptor is only valid if its highest bit is ±
+º                                                                              ±
+º                             example (iPentiumPro):                           ±
+º                              EAX=03020101h, EBX=00000000h                    ±
+º                              ECX=00000000h, EDX=06040A42h                    ±
+º                              Because AL is 01h, the descriptors are valid.   ±
+º                              All of the descriptors are valid, because their ±
+º                              highest bit is 0. This iPentiumPro includes     ±
+º                              the 4K/M c/d TLB, an 8+8 KB c/d L1 cache and a  ±
+º                              256 KB c+d L2 cache.                            ş
+º                                                                              ±
+º If CPU is not supporting this instruction (on earlier 486) your computer may ±
+º hang or stop with an INTÿ6.                                                  ±
+º                                                                              
+ÈÍş±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±ÄÙ
+ F1 Help on help  Alt+F1 Previous topic  Shift+F1 Help index
+  File  Edit  Search  Run  Assemble  Debug  Tools  Options  Window  Help   14 44
+ÉÍ[ş]ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ Help ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ[]Í»
+º                              the 4K/M c/d TLB, an 8+8 KB c/d L1 cache and a  
+º                              256 KB c+d L2 cache.                            ±
+º                                                                              ±
+º If CPU is not supporting this instruction (on earlier 486) your computer may ±
+º hang or stop with an INTÿ6.                                                  ±
+º                                                                              ±
+º                           Clocks                 Size                        ±
+º  Operands         286   386   486   586   686    Bytes                       ±
+º  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ             ±
+º  EAX=0             -     -      9     9    ?      2                          ±
+º  EAX=1             -     -     14    14    ?      2                          ±
+º ÿÿÿ                                                                          ±
+º ÿşÿSee Copyrights (4P) for source/author of this information.                ±
+º  ş see: InstructionÿTiming                                                   ±
+º         Notation                                                             ±
+º         CPUÿdetermination                                                    ±
+º         80486+ÿonlyÿinstructions                                             ±
+º         Pentiumÿonlyÿinstructions                                            ±
+º         PentiumÿProÿonlyÿinstructions                                        ±
+º         80x86ÿArchitecture                                                   ş
+º  ÿ                                                                           
+ÈÍş±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±ÄÙ
+ F1 Help on help  Alt+F1 Previous topic  Shift+F1 Help index

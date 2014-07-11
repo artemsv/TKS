@@ -1,0 +1,166 @@
+º  Debugger traps Ü                                                            þ
+º  ßßßßßßßßßßßßßßßß                                                            ±
+º                                                                              ±
+º Most of the code described below is very sophisticated. You should refer to  ±
+º the following topics for additional help:                                    ±
+º                                                                              ±
+º  þ 80x86ÿArchitecture                                                        ±
+º    Flags                                                                     ±
+º                                                                              ±
+º  Ü Check for an active debugger                                              ±
+º  ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß                                              ±
+º                                                                              ±
+º We should check first if there is a debugger active:                         ±
+º ÿÿÿ                                                                          ±
+º ÿþÿMake use of the prefetchÿqueue                                            ±
+º                                                                              ±
+º Use self modifying code to modify the memory a few bytes ahead of the actual ±
+º instruction. If only the CPU is running your program the prefetch queue      ±
+º already holds your code and the modification never occurs. In Single Step    ±
+º Mode the modified code is executed:                                          
+º                                                                              
+º         CALL    TEST_CALL       ;only for pushing IP on stack                ±
+º TEST_CALL:                                                                   ±
+º         INT     3               ;stop debuggger here                         ±
+º                                                                              þ
+º  ;this forces the code also to look not like it is                           ±
+º  ;some heuristic virus scans says this method is used by a virus             ±
+º  ;and You WON'T your program look suspicious???!                             ±
+º                                                                              ±
+º         POP     BP              ;so we gain IP in BP                         ±
+º         SUB     BP,codestart    ;correct value                               ±
+º                                                                              ±
+º  ;you should do this at the very beginning of your program - no one knows    ±
+º  ;how many instructions are between now and the start of your program - so   ±
+º  ;you may be not able to calc the value of codestart                         ±
+º  ;Note that this is only in a Pascal inline procedure neccesary.             ±
+º  ;Pascal internal assembler or your assembler when making a .COM or .EXE     ±
+º  ;file is calculating the offset correct, however.                           ±
+º                                                                              ±
+º         MOV     BYTE PTR CS:[OFFSET TEST_BUG+BP+1],01                        ±
+º TEST_BUG:                                                                    
+º         MOV     AX,0            ;modify here to: MOV AX,1                    ±
+º         CMP     AX,1            ;                                            ±
+º         JNE     NO_DEBUGGER     ;OK - start our stuff                        ±
+º         JMP     DEBUG           ;wipe them out                               ±
+º ÿÿÿ                                                                          ±
+º ÿþÿUse Install test to check for Protected Mode Turbo Debugger:              þ
+º                                                                              ±
+º         MOV     AX,0FB43h       ;magic value 0FB43h                          ±
+º         MOV     BX,100h                                                      ±
+º         INT     2Fh             ;call multiplexer INT                        ±
+º         CMP     BX,0FB43h       ;IF BX=0FB43h THEN                           ±
+º                                 ; Turbo Debugger Protected is active         ±
+º         JNE     @NODEBUG        ;IF NOT jump to normal executing             ±
+º         RETF                    ;ELSE kill program                           ±
+º ÿÿÿ                                                                          ±
+º ÿþÿCheck if INTÿ3 & INTÿ1 are pointing to an IRET (CFh). If NOT put a IRET   ±
+º ÿÿÿat the address of the handler routines. Get the address with MSDOS        ±
+º ÿÿÿGetINTVec function.                                                       ±
+º                                                                              ±
+º  Ü Stopping a debugger                                                       
+º  ßßßßßßßßßßßßßßßßßßßßß                                                       
+º                                                                              ±
+º If you will stop other people from debugging your code you can use some nice ±
+º tricks. Most of them causes the debugger to stop, crash the system, or end   ±
+º the program only if it is under debug. Add the code examples more then once  ±
+º to your program. It would be wise to add them after the hacker has some time ±
+º spend with your program, maybe after the initialisation parts.               ±
+º ÿÿÿ                                                                          ±
+º ÿþÿStop the debugger with INT3 instructions                                  ±
+º                                                                              þ
+º Some INT3 instructions, wide spread over your code, can confuse the          ±
+º beginner.                                                                    ±
+º ÿÿÿ                                                                          ±
+º ÿþÿMask out some important ports and interrupts                              ±
+º                                                                              ±
+º Serial ports (without mouse no fun), keyboard etc. will do fine.             ±
+º ÿÿÿ                                                                          ±
+º ÿþÿRedefine some INT's to confuse hackers and stop debuggers                 ±
+º                                                                              ±
+º If no debugger is activ your program works fine. But if there is one, your   ±
+º program lands on INT3 instead on INT21h and force the debugger to stop. The  
+º original function call is never made so your program miss something...       
+º Beside, any INT21h call to avoid this (the hacker could replace the INT3     ±
+º instruction with INT21h, which is actually 1 Byte longer, hehehe...) make    ±
+º your computer go nuts or force at least an error.                            ±
+º                                                                              ±
+º  PSEUDO CODE:                                                                ±
+º                                                                              ±
+º         STORE   INT3 VECTOR                                                  ±
+º         STORE   INT21h VECTOR                                                ±
+º         REPLACE INT3 VECTOR WITH INT21H VECTOR                               ±
+º         SET     INT21h VECTOR TO 0:0                                         ±
+º                                                                              þ
+º         Then use INT3 instead INT 21h in your program                        ±
+º                                                                              ±
+º         RESTORE INT21h VECTOR                                                ±
+º         RESTORE INT3 VECTOR                                                  ±
+º ÿÿÿ                                                                          ±
+º ÿþÿMake a jump in the middle of another instruction                          ±
+º                                                                              ±
+º In single step mode most debuggers can't find this combination and are       ±
+º selecting the next instruction. Use the following code to end the program:   
+º                                                                              
+º         PUSH    DS                                                           ±
+º         PUSH    CS                                                           ±
+º         POP     DS              ;DS=CS                                       ±
+º         PUSH    AX                                                           ±
+º         JMP     NOSTEP+2                                                     ±
+º  NOSTEP:                                                                     ±
+º         MOV     DS:BYTE PTR [06EBh],00                                       ±
+º         MOV     AX,4C01h                                                     ±
+º         INT     21h                                                          ±
+º         POP     AX                                                           ±
+º         POP     DS                                                           ±
+º ÿÿÿ                                                                          ±
+º ÿþÿSwitch to protected mode and back to wipe out any 386 debuggers           ±
+º                                                                              þ
+º         PUSHAD                                                               ±
+º         CLI                                                                  ±
+º         MOV     EAX,CR0                                                      ±
+º         OR      EAX,1                                                        ±
+º         MOV     CR0,EAX                                                      ±
+º         JMP     penabled        ;make prefetch queue empty                   
+º  penabled:                                                                   
+º         AND     AL,0FEh         ;we are now in protected mode                ±
+º         MOV     CR0,EAX                                                      ±
+º         JMP     pdisabled       ;make prefetch queue empty                   ±
+º  pdisabled:                                                                  ±
+º         STI                     ;back in real mode                           ±
+º         POPAD                                                                ±
+º                                                                              ±
+º  Ü Stopping a multitasking OS                                                ±
+º  ßßßßßßßßßßßßßßßßßßßßßßßßßßßß                                                ±
+º                                                                              ±
+º  Try this, but save all files. It should stop OS/2 or Windows 95 hard.       ±
+º                                                                              ±
+º  loopy: CLI                                                                  ±
+º         HLT                                                                  ±
+º         JMP     loopy                                                        ±
+º                                                                              ±
+º  To hide this code from opcode scanners:                                     þ
+º                                                                              ±
+º         XOR     CS:[OFFSET n],64h    ;resets ZERO flag (64h XOR 90h = F4h)   ±
+º                                      ;changes NOP to HLT                     
+º                                                                              
+º         XOR     CS:[OFFSET n],64h    ;resets ZERO flag (64h XOR 90h = F4h)   ±
+º                                      ;changes NOP to HLT                     ±
+º  loops: CLI                                                                  ±
+º         MOV     AX,8998h             ;whatever you like                      ±
+º  n:     NOP                          ;actually a HLT is executed             ±
+º         CLI                                                                  ±
+º         JNZ     @loops:              ;ZERO flag is never set                 ±
+º                                                                              ±
+º  þ Note: OS/2 does some virtualisation of the EFLAGS register. The above     ±
+º    example SHOULD NOT do any harm under OS/2. Unfortunately it slowed the    ±
+º    test computer (586-133) down so much that a reboot was neccessary :-)     ±
+º                                                                              ±
+º  Ü Stopping protected mode debuggers                                         ±
+º  ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß                                         ±
+º                                                                              ±
+º  þ Manipulate the Debugÿregisters and clear the breakpoints etc.             ±
+º                                                                              ±
+º  þ see: InstructionÿTiming                                                   ±
+º         Notation                                                             þ
+º         Examples                                                             

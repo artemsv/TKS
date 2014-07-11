@@ -1,0 +1,584 @@
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 1
+f.ASM
+
+
+
+      1	    0000			 .model	small		 ;файловый диалог  08.01.03.
+      2					 .386
+      3					 extrn Win2:proc,ChangeAtribut:proc,GetBlock:proc,PutBlock:proc,CaretHide:proc
+      4					 extrn CaretShow:proc,MouseHide:proc,MouseShow:proc,FillBackBlock:proc
+      5					 extrn Shadow:proc,GetStart:proc,FillByte:proc,Pause:proc,CopyFiles:proc
+      6					 extrn buf:word,OutStr:proc,ChangeAtribut:proc,KeyPressed:proc,HandlerStd:proc
+      7					 extrn GetMouseInfo:proc,GetCurDir:proc,OutDB:proc,file:byte,ClearFileName:proc
+      8					 extrn Window:proc,GetMem:proc,FreeMem:proc,SetCurDir:proc,FillWord:proc
+      9					 extrn FillByte:proc,Len:proc
+     10					 PUBLIC	FileDialog,fileTMP
+     11	    0000			 .data
+     12						 extrn initPtr:word,handlerPtr:word
+     13	    0000  0104*(43)			 dir	 db	 260 dup (67)
+     14	    0104  7400				 norm	 dw	 7400h
+     15	    0106  2E00				 cur	 dw	 2E00h
+     16	    0108  0C*(5E)			 fileTMP db	 12 dup(5Eh)
+     17	    0114  ??				 byte3	 db	 ?
+     18	    0115			 .code
+     19
+     20	    0000			 IsFile:				 ;является ли объект в fileTMP файлом
+     21	    0000  52 53				 push dx bx
+     22	    0002  B9 001F			 mov cx,11111B
+     23	    0005  BA 0108r			 lea dx,fileTMP
+     24	    0008  B4 4E				 mov ah,4Eh
+     25	    000A  CD 21				 int 21h			 ;FindFirst
+     26	    000C  B4 2F				 mov ah,2Fh
+     27	    000E  CD 21				 int 21h			 ;get current DTA
+     28	    0010  26: 80 7F 15 10		 cmp byte ptr es:[bx+15h],10h
+     29	    0015  74 03				 je short IF100
+     30	    0017  F9				 stc
+     31	    0018  EB 01				 jmp short IF200
+     32	    001A  F8			 IF100:	 clc
+     33	    001B  5B 5A			 IF200:	 pop bx	dx
+     34	    001D  C3				 ret
+     35
+     36	    001E			 FileDialogInit:
+     37	    001E  52				 push dx
+     38	    001F  81 C2	010D			 add dx,010Dh
+     39	    0023  E8 01C7			 call VertLine
+     40	    0026  BA 062D			 mov dx,062Dh
+     41	    0029  E8 01C1			 call VertLine
+     42	    002C  5A				 pop dx
+     43	    002D  B9 001F			 mov cx,11111B
+     44	    0030  E8 0000e			 call CopyFiles
+     45	    0033  33 ED				 xor bp,bp				 ;первый прорисовываемый файл
+     46	    0035  E8 0143			 call DrawFiles
+     47	    0038  E8 0020			 call SelectFirst
+     48	    003B  E8 009A			 call UpdateDirName
+     49	    003E  C3				 ret
+     50
+     51	    003F			 ClearFileWindow:			 ;очищает окно выбора файлов
+     52	    003F  52 53				 push dx bx
+     53	    0041  B0 20				 mov al,20h			 ;заполняем пробелами
+     54	    0043  8A 26	0105r			 mov ah,byte ptr norm+1
+     55	    0047  BA 0614			 mov dx,0614h
+     56	    004A  BB 0E0C			 mov bx,0E0Ch
+     57	    004D  B9 0003			 mov cx,3
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 2
+f.ASM
+
+
+
+     58	    0050  E8 0000e		 CFW100: call FillBackBlock		 ;очищает очередную панель
+     59	    0053  80 C2	0D			 add dl,13
+     60	    0056  E2 F8				 loop CFW100
+     61	    0058  5B 5A				 pop bx	dx
+     62	    005A  C3				 ret
+     63
+     64	    005B			 SelectFirst:				 ;выделяет первый пункт
+     65	    005B  E8 0000e			 call MouseHide
+     66	    005E  BA 0614			 mov dx,0614h
+     67	    0061  BB 010C			 mov bx,010Ch
+     68	    0064  A1 0106r			 mov ax,cur
+     69	    0067  E8 0000e			 call ChangeAtribut		 ;выделяем первый пункт
+     70	    006A  E8 0000e			 call MouseShow
+     71	    006D  C3				 ret
+     72
+     73	    006E			 DeleteSelect:				 ;снимает выделение с текущего пункта
+     74	    006E  E8 0000e			 call MouseHide
+     75	    0071  A1 0104r			 mov ax,norm
+     76	    0074  E8 0000e			 call ChangeAtribut
+     77	    0077  E8 0000e			 call MouseShow
+     78	    007A  C3				 ret
+     79
+     80	    007B			 GoParentDir:				 ;установить текущим родительский
+     81	    007B  52 1E				 push dx ds
+     82	    007D  07				 pop es
+     83	    007E  BF 0000r			 lea di,dir
+     84	    0081  FC				 cld
+     85	    0082  B0 00				 mov al,0
+     86	    0084  B9 0040			 mov cx,64
+     87	    0087  F2> AE			 repne scasb			 ;ищем конец имени текущего
+     88	    0089  FD				 std
+     89	    008A  B0 5C				 mov al,'\'
+     90	    008C  B9 0040			 mov cx,64
+     91	    008F  F2> AE			 repne scasb			 ;ищем начало текущего каталога
+     92	    0091  26: 80 3D 3A			 cmp byte ptr es:[di],':'
+     93	    0095  75 01				 jne short GPD100			 ;родительский-корневой
+     94	    0097  47				 inc di
+     95	    0098  26: C6 45 01 00	 GPD100: mov byte ptr es:[di+1],0
+     96	    009D  BA 0000r			 lea dx,dir
+     97	    00A0  E8 0000e			 call SetCurDir
+     98	    00A3  5A				 pop dx
+     99	    00A4  C3				 ret
+    100
+    101	    00A5			 GoSubDir:				 ;войти	в подкаталог
+    102	    00A5  BF 0000r			 lea di,dir
+    103	    00A8  52 1E				 push dx ds
+    104	    00AA  07				 pop es
+    105	    00AB  FC				 cld
+    106	    00AC  B0 00				 mov al,0
+    107	    00AE  B9 0040			 mov cx,64
+    108	    00B1  F2> AE			 repne scasb			 ;ищем конец имени текущего
+    109	    00B3  26: 80 7D FE 5C		 cmp byte ptr es:[di-2],'\'	 ;текущий-корневой?
+    110	    00B8  74 01				 je short GSD100
+    111	    00BA  47				 inc di
+    112	    00BB  4F			 GSD100: dec di
+    113	    00BC  26: C6 45 FF 5C		 mov byte ptr es:[di-1],'\'	 ;в этот конец добавляем черту
+    114	    00C1  BE 0108r			 lea si,fileTMP			 ;смещение в DS	(DS=FS!)
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 3
+f.ASM
+
+
+
+    115	    00C4  B9 000C			 mov cx,12			 ;максимальная длина имени каталога
+    116	    00C7  A4			 GSD160: movsb				 ;цикл копирования имени подкаталога
+    117	    00C8  80 7C	FF 00			 cmp byte ptr [si-1],0		 ;из временного	буфера в FS:0000 в dir
+    118	    00CC  74 F9				 je short GSD160
+    119	    00CE  E2 F7				 loop GSD160
+    120	    00D0  BA 0000r		 GSD200: lea dx,dir
+    121	    00D3  E8 0000e			 call SetCurDir
+    122	    00D6  5A				 pop dx
+    123	    00D7  C3				 ret
+    124
+    125	    00D8			 UpdateDirName:				 ;обновляет строку каталога
+    126	    00D8  55 52	53 56			 push bp dx bx si
+    127	    00DC  BE 0000r			 lea si,dir
+    128	    00DF  E8 0000e			 call GetCurDir
+    129	    00E2  BA 0519			 mov dx,0519h
+    130	    00E5  B9 0020			 mov cx,20h
+    131	    00E8  8A 26	0105r			 mov ah,byte ptr norm+1
+    132	    00EC  B0 CD				 mov al,205
+    133	    00EE  E8 0000e			 call FillWord			 ;обновим место	надписи	имени каталога
+    134	    00F1  E8 0000e			 call Len			 ;CX-длина строки в SI
+    135	    00F4  51				 push cx
+    136	    00F5  B9 0003			 mov cx,3			 ;'D:\'	- 3 символа
+    137	    00F8  B7 01				 mov bh,01
+    138	    00FA  8A D9				 mov bl,cl
+    139	    00FC  B8 7EFF			 mov ax,7EFFh
+    140	    00FF  E8 0000e			 call ChangeAtribut
+    141	    0102  B9 0003			 mov cx,3
+    142	    0105  E8 0000e			 call OutDB			 ;вывели стандартную часть пути
+    143	    0108  80 C2	03			 add dl,3
+    144						 ;теперь надо знать,уместится ли остальная часть пути?
+    145	    010B  59				 pop cx				 ;длина	всего пути
+    146	    010C  83 E9	03			 sub cx,3			 ;длина	оставшегося пути
+    147	    010F  83 F9	16			 cmp cx,22			 ;22-длина оставшегося места
+    148	    0112  72 1C				 jb short UDN100	 ;места	хватит
+    149	    0114  8B E9				 mov bp,cx
+    150	    0116  83 ED	1C			 sub bp,28			 ;BP-непомещающийся остаток
+    151	    0119  B7 01				 mov bh,01
+    152	    011B  B3 03				 mov bl,3
+    153	    011D  B8 7EFF			 mov ax,7EFFh
+    154	    0120  E8 0000e			 call ChangeAtribut
+    155	    0123  B0 2E				 mov al,'.'
+    156	    0125  B9 0003			 mov cx,3			 ;2 точки
+    157	    0128  E8 0000e			 call FillByte			 ;3 точки вместо непоместившегося пути
+    158	    012B  80 C2	03			 add dl,3
+    159	    012E  03 F5				 add si,bp
+    160	    0130  8A D9			 UDN100: mov bl,cl
+    161	    0132  B7 01				 mov bh,01
+    162	    0134  B8 7EFF			 mov ax,7EFFh
+    163	    0137  E8 0000e			 call ChangeAtribut
+    164	    013A  F8				 clc			 ;сбросим CF,чтобы не учтиывать	атрибут	в AL
+    165	    013B  E8 0000e			 call OutDB
+    166	    013E  5E 5B	5A 5D			 pop si	bx dx bp
+    167	    0142  C3				 ret
+    168
+    169	    0143			 GetPunct:				 ;возвращает в AH номер	текущего пункта
+    170	    0143  8A E6				 mov ah,dh
+    171	    0145  80 EC	05			 sub ah,05h
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 4
+f.ASM
+
+
+
+    172	    0148  80 FA	14			 cmp dl,14h
+    173	    014B  74 0D				 je short GP200				 ;первая панель
+    174	    014D  80 FA	21			 cmp dl,21h
+    175	    0150  75 05				 jne short GP100			 ;третья панель
+    176	    0152  80 C4	0E			 add ah,14
+    177	    0155  EB 03				 jmp short GP200
+    178	    0157  80 C4	1C		 GP100:	 add ah,28
+    179	    015A  C3			 GP200:	 ret
+    180
+    181	    015B			 GetCoord:		 ;преобразует номер пункта в AH	в координату в DX
+    182	    015B  80 FC	0E			 cmp ah,14
+    183	    015E  77 07				 ja short GC100				 ;не в первой панели
+    184	    0160  80 C4	05			 add ah,05h
+    185	    0163  B2 14				 mov dl,14h
+    186	    0165  EB 11				 jmp short GC300
+    187	    0167  80 FC	1C		 GC100:	 cmp ah,28
+    188	    016A  77 07				 ja short GC200
+    189	    016C  80 EC	09			 sub ah,9
+    190	    016F  B2 21				 mov dl,21h
+    191	    0171  EB 05				 jmp short GC300
+    192	    0173  80 EC	17		 GC200:	 sub ah,23
+    193	    0176  B2 2E				 mov dl,2Eh
+    194	    0178  8A F4			 GC300:	 mov dh,ah
+    195	    017A  C3				 ret
+    196
+    197	    017B			 DrawFiles:		 ;прорисовывает	все файлы в буфере в FS:000E
+    198	    017B  BE 000C			 mov si,12				 ;слово-кол-во файлов
+    199	    017E  52 56	53 1E 0F A0		 push dx si bx ds fs			 ;BP-столько фалов пропустить
+    200	    0184  1F				 pop ds					 ;DS:000E-буфер
+    201	    0185  8B 1C				 mov bx,word ptr [si]			 ;BX-количество	файлов
+    202	    0187  BA 0614			 mov dx,0614h
+    203	    018A  88 16	0114r			 mov byte3,dl
+    204	    018E  83 C6	02			 add si,2				 ;пропускаем слово-кол-во файлов
+    205	    0191  32 E4				 xor ah,ah				 ;счётчик символов имени файла
+    206	    0193  AC			 DF100:	 lodsb					 ;AL-символ имени
+    207	    0194  0A C0				 or al,al
+    208	    0196  74 2F				 je short DF300				 ;напоролись на	конец файла
+    209	    0198  3C 2E				 cmp al,'.'
+    210	    019A  74 0D				 je short DF200
+    211	    019C  B9 0001		 DF150:	 mov cx,1
+    212	    019F  E8 0000e			 call FillByte
+    213	    01A2  47				 inc di
+    214	    01A3  FE C2				 inc dl
+    215	    01A5  FE C4				 inc ah
+    216	    01A7  EB EA				 jmp short DF100
+    217	    01A9			 DF200:						 ;цикл заполнения пробелами
+    218	    01A9  0A E4				 or ah,ah
+    219	    01AB  74 EF				 je short DF150				 ;это первая точка род.каталога
+    220	    01AD  80 7C	FE 2E			 cmp byte ptr [si-2],2Eh
+    221	    01B1  74 E9				 je short DF150				 ;это вторая точка род.каталога
+    222	    01B3  B0 20				 mov al,32
+    223	    01B5  B9 0001			 mov cx,1
+    224	    01B8  E8 0000e			 call FillByte
+    225	    01BB  47				 inc di
+    226	    01BC  FE C2				 inc dl
+    227	    01BE  FE C4				 inc ah
+    228	    01C0  80 FC	09			 cmp ah,9
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 5
+f.ASM
+
+
+
+    229	    01C3  72 E4				 jb short DF200
+    230	    01C5  EB CC				 jmp short DF100
+    231	    01C7			 DF300:
+    232	    01C7  32 E4				 xor ah,ah				 ;счетчик символов имени файла
+    233	    01C9  4B				 dec bx
+    234	    01CA  74 1C				 jz short DF400				 ;файлы	кончились
+    235	    01CC  8A 16	0114r			 mov dl,byte3
+    236	    01D0  FE C6				 inc dh					 ;позиция по Y в окне
+    237	    01D2  80 FE	14			 cmp dh,14h
+    238	    01D5  72 BC				 jb short DF100
+    239	    01D7  80 FA	2E			 cmp dl,2Eh
+    240	    01DA  74 0C				 je short DF400				 ;это была последняя панель
+    241	    01DC  B6 06				 mov dh,06h
+    242	    01DE  80 C2	0D			 add dl,0Dh
+    243	    01E1  80 06	0114r 0D		 add byte3,0Dh
+    244	    01E6  EB AB				 jmp short DF100
+    245	    01E8  1F 5B	5E 5A		 DF400:	 pop ds	bx si dx
+    246	    01EC  C3				 ret
+    247
+    248	    01ED			 VertLine:					 ;чертит вертикальную линию
+    249	    01ED  52				 push dx
+    250	    01EE  B0 B3				 mov al,'│'
+    251	    01F0  B9 0001		 VL100:	 mov cx,1
+    252	    01F3  E8 0000e			 call FillByte
+    253	    01F6  FE C6				 inc dh
+    254	    01F8  80 FE	14			 cmp dh,14h
+    255	    01FB  72 F3				 jb short VL100
+    256	    01FD  5A				 pop dx
+    257	    01FE  C3				 ret
+    258
+    259	    01FF			 GetSelectFile:	 ;копирует в 12-байтовый буфер fileTMP имя выбранного файла
+    260							 ;из главного буфера со	всеми именами в	FS:000E
+    261	    01FF  E8 FF41			 call GetPunct			 ;AH-номер текущего пункта
+    262	    0202  B0 00				 mov al,0
+    263	    0204  86 C4				 xchg al,ah
+    264	    0206  03 E8				 add bp,ax			 ;теперь этот номер в BP
+    265	    0208  B0 0D				 mov al,13			 ;признак конца	имени файла
+    266	    020A  8B CD				 mov cx,bp			 ;счётчик концов имён файлов ;)
+    267	    020C  49				 dec cx
+    268	    020D  BE 000E			 mov si,14			 ;SI-начало главного буфера с именами
+    269	    0210  55 1E	1E 0F A0		 push bp ds ds fs
+    270	    0215  1F 07				 pop ds	es			 ;DS-сегмент буфера с именами файлов
+    271	    0217  E3 0C				 jcxz GSF300			 ;это первый файл-сразу	на копирование
+    272	    0219			 GSF100:				 ;цикл поиска начала выбр-го файла
+    273	    0219  80 3C	00			 cmp byte ptr [si],0
+    274	    021C  75 04				 jne short GSF200
+    275	    021E  46				 inc si				 ;пропустим термин.ноль
+    276	    021F  49				 dec cx
+    277	    0220  E3 03				 jcxz GSF300			 ;нашли	имя выбранного файла
+    278	    0222			 GSF200:
+    279	    0222  46				 inc si
+    280	    0223  EB F4				 jmp short GSF100
+    281	    0225			 GSF300:				 ;теперь в SI -	имя этого файла
+    282	    0225  BF 0108r			 lea di,fileTMP
+    283	    0228  FC				 cld
+    284	    0229  AC			 GSF400: lodsb
+    285	    022A  AA				 stosb
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 6
+f.ASM
+
+
+
+    286	    022B  0A C0				 or al,al
+    287	    022D  75 FA				 jne GSF400
+    288	    022F  1F 5D				 pop ds	bp
+    289	    0231  C3				 ret
+    290
+    291	    0232			 FileDialog:
+    292	    0232  BB 03E8			 mov bx,1000
+    293	    0235  E8 0000e			 call GetMem
+    294	    0238  8E E0				 mov fs,ax				 ;память для буфера имён файлов
+    295	    023A  BA 0513			 mov dx,0513h
+    296	    023D  BB 1028			 mov bx,1028h
+    297	    0240  8A 26	0105r			 mov ah,byte ptr norm+1
+    298	    0244  B0 20				 mov al,20h
+    299	    0246  BF 001Er			 lea di,FileDialogInit
+    300	    0249  89 3E	0000e			 mov initPtr,di
+    301	    024D  BF 0259r			 lea di,FileDialogHandler
+    302	    0250  89 3E	0000e			 mov handlerPtr,di
+    303	    0254  F8				 clc
+    304	    0255  E8 0000e			 call Window
+    305	    0258  C3				 ret					 ;AX-код выхода
+    306
+    307	    0259			 FileDialogHandler:		 ;обработчик событий для окна выбора файлов
+    308	    0259  72 4D				 jc short SF150				 ;от мыши
+    309	    025B  80 FC	01			 cmp ah,1
+    310	    025E  74 4C				 je short SF300				 ;нажата расширенная клавиша
+    311	    0260  3C 0D				 cmp al,13				 ;нажата клавиша Enter?
+    312	    0262  75 3A				 jne short SF140
+    313	    0264  E8 FE71			 call UpdateDirName
+    314	    0267  E8 FF95			 call GetSelectFile
+    315	    026A  E8 FE6B			 call UpdateDirName
+    316	    026D  80 3E	0108r 2E		 cmp byte ptr [fileTMP],'.'		 ;это не корневой каталог?
+    317	    0272  74 0A				 je short SF120				 ;это файл или подкаталог
+    318	    0274  E8 FD89			 call IsFile				 ;если в fileTMP файл -	CF=1
+    319	    0277  72 20				 jc short SF136				 ;это файл
+    320	    0279  E8 FE29			 call GoSubDir
+    321	    027C  EB 03				 jmp short SF130
+    322	    027E			 SF120:
+    323	    027E  E8 FDFA			 call GoParentDir
+    324	    0281			 SF130:
+    325	    0281  E8 FE54			 call UpdateDirName
+    326	    0284  B9 001F			 mov cx,11111B				 ;атрибуты файлов
+    327	    0287  E8 0000e			 call CopyFiles
+    328	    028A  E8 FDB2			 call ClearFileWindow
+    329	    028D  33 ED				 xor bp,bp			 ;первый прорисовываемый файл -	первый ;)
+    330	    028F  E8 FEE9			 call DrawFiles
+    331	    0292  E8 FDC6			 call SelectFirst
+    332	    0295  F8				 clc				 ;окно закрывать не надо
+    333	    0296  E9 00A5			 jmp SF1300
+    334	    0299			 SF136:
+    335	    0299  33 C0				 xor ax,ax			 ;код выхода - OK
+    336	    029B  E9 0099			 jmp SF1250
+    337	    029E			 SF140:
+    338	    029E  3C 1B				 cmp al,27
+    339	    02A0  0F 85	008C			 jne SF1200
+    340	    02A4  F9				 stc				 ;окно надо закрыть
+    341	    02A5  E9 008F			 jmp SF1250
+    342	    02A8			 SF150:
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 7
+f.ASM
+
+
+
+    343	    02A8  F8				 clc
+    344	    02A9  E9 0084			 jmp SF1200
+    345	    02AC			 SF300:
+    346	    02AC  3C 48				 cmp al,72		 ;стрелка вверх
+    347	    02AE  75 1F				 jne short SF600
+    348	    02B0  E8 FDBB			 call DeleteSelect
+    349	    02B3  80 FE	06			 cmp dh,06h		 ;верхняя строка?
+    350	    02B6  74 04				 je short SF400
+    351	    02B8  FE CE				 dec dh
+    352	    02BA  EB 62				 jmp short SF1000
+    353	    02BC			 SF400:
+    354	    02BC  80 FA	14			 cmp dl,14h		 ;первая панель?
+    355	    02BF  74 07				 je short SF500
+    356	    02C1  80 EA	0D			 sub dl,0Dh		 ;переходим на предыдущую панель
+    357	    02C4  B6 13				 mov dh,13h		 ;нижний пункт
+    358	    02C6  EB 56				 jmp short SF1000
+    359	    02C8			 SF500:
+    360	    02C8  0B ED				 or bp,bp		 ;прорисовывается-ли первый файл в списке
+    361	    02CA  74 52				 je short SF1000	 ;да-ничего нельзя сделать
+    362	    02CC  4D				 dec bp			 ;прорисовка на	один файл раньше
+    363	    02CD  EB 5E				 jmp short SF1100
+    364	    02CF			 SF600:
+    365	    02CF  3C 4D				 cmp al,77		 ;стрелка вправо
+    366	    02D1  75 24				 jne short SF700
+    367	    02D3  E8 FD98			 call DeleteSelect
+    368	    02D6  80 FA	2E			 cmp dl,2Eh		 ;последняя панель?
+    369	    02D9  74 55	90 90			 je SF1200		 ;да-ничего нельзя сделать
+    370	    02DD  E8 FE63			 call GetPunct		 ;получим в AH номер пункта
+    371	    02E0  80 C4	0E			 add ah,14		 ;получим номер	требуемого пункта
+    372	    02E3  64: 8B 0E 000C		 mov cx,word ptr fs:[12]
+    373	    02E8  0A ED				 or ch,ch
+    374	    02EA  75 06				 jnz short SF610	 ;файлов больше	чем 255-с CL сравнивать	нельзя
+    375	    02EC  3A CC				 cmp cl,ah
+    376	    02EE  73 02				 jae short SF610	 ;файлов хватит
+    377	    02F0  8A E1				 mov ah,cl		 ;файлов не хватит-выделяем последний файл
+    378	    02F2			 SF610:
+    379	    02F2  E8 FE66			 call GetCoord		 ;получаем координаты нового пункта
+    380	    02F5  EB 27				 jmp short SF1000
+    381	    02F7			 SF700:
+    382	    02F7  3C 50				 cmp al,80		 ;стрелка вниз
+    383	    02F9  75 35	90 90			 jne SF1200
+    384	    02FD  E8 FD6E			 call DeleteSelect
+    385	    0300  E8 FE40			 call GetPunct		 ;AH-номер текущего пункта
+    386	    0303  80 FC	2A			 cmp ah,42		 ;всего	имеется	42 пункта
+    387	    0306  74 16				 je short SF1000	 ;временно нету
+    388	    0308  FE C4				 inc ah			 ;номер	требуемого пункта
+    389	    030A  64: 8B 0E 000C		 mov cx,word ptr fs:[12] ;CX-количество	файлов
+    390	    030F  0A ED				 or ch,ch
+    391	    0311  75 06				 jne short SF710	 ;файлов больше	чем 255
+    392	    0313  3A CC				 cmp cl,ah
+    393	    0315  73 02				 jae short SF710	 ;файлов хватит
+    394	    0317  FE CC				 dec ah			 ;это был последний файл-возврат
+    395	    0319			 SF710:
+    396	    0319  E8 FE3F			 call GetCoord
+    397	    031C  EB 00				 jmp short SF1000
+    398	    031E			 SF1000:
+    399	    031E  E8 0000e			 call MouseHide
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 8
+f.ASM
+
+
+
+    400	    0321  A1 0106r			 mov ax,cur		 ;маска
+    401	    0324  E8 0000e			 call ChangeAtribut
+    402	    0327  E8 0000e			 call MouseShow
+    403	    032A  EB 04	90			 jmp SF1200
+    404	    032D  E8 FE4B		 SF1100: call DrawFiles
+    405	    0330  E8 0000e		 SF1200: call HandlerStd
+    406	    0333  73 09	90 90			 jnc SF1300
+    407	    0337  0F A0			 SF1250: push fs
+    408	    0339  07				 pop es
+    409	    033A  E8 0000e			 call FreeMem
+    410	    033D  F9				 stc			 ;закрыть
+    411	    033E  C3			 SF1300: ret
+    412					 end
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 9
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "23/04/03"
+??FILENAME			  Text	 "f	  "
+??TIME				  Text	 "16:38:00"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0F0FH
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 F
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+BUF				  Word	 ----:---- Extern
+BYTE3				  Byte	 DGROUP:0114
+CARETHIDE			  Near	 ----:---- Extern
+CARETSHOW			  Near	 ----:---- Extern
+CFW100				  Near	 _TEXT:0050
+CHANGEATRIBUT			  Near	 ----:---- Extern
+CLEARFILENAME			  Near	 ----:---- Extern
+CLEARFILEWINDOW			  Near	 _TEXT:003F
+COPYFILES			  Near	 ----:---- Extern
+CUR				  Word	 DGROUP:0106
+DELETESELECT			  Near	 _TEXT:006E
+DF100				  Near	 _TEXT:0193
+DF150				  Near	 _TEXT:019C
+DF200				  Near	 _TEXT:01A9
+DF300				  Near	 _TEXT:01C7
+DF400				  Near	 _TEXT:01E8
+DIR				  Byte	 DGROUP:0000
+DRAWFILES			  Near	 _TEXT:017B
+FILE				  Byte	 ----:---- Extern
+FILEDIALOG			  Near	 _TEXT:0232
+FILEDIALOGHANDLER		  Near	 _TEXT:0259
+FILEDIALOGINIT			  Near	 _TEXT:001E
+FILETMP				  Byte	 DGROUP:0108
+FILLBACKBLOCK			  Near	 ----:---- Extern
+FILLBYTE			  Near	 ----:---- Extern
+FILLWORD			  Near	 ----:---- Extern
+FREEMEM				  Near	 ----:---- Extern
+GC100				  Near	 _TEXT:0167
+GC200				  Near	 _TEXT:0173
+GC300				  Near	 _TEXT:0178
+GETBLOCK			  Near	 ----:---- Extern
+GETCOORD			  Near	 _TEXT:015B
+GETCURDIR			  Near	 ----:---- Extern
+GETMEM				  Near	 ----:---- Extern
+GETMOUSEINFO			  Near	 ----:---- Extern
+GETPUNCT			  Near	 _TEXT:0143
+GETSELECTFILE			  Near	 _TEXT:01FF
+GETSTART			  Near	 ----:---- Extern
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 10
+Symbol Table
+
+
+
+GOPARENTDIR			  Near	 _TEXT:007B
+GOSUBDIR			  Near	 _TEXT:00A5
+GP100				  Near	 _TEXT:0157
+GP200				  Near	 _TEXT:015A
+GPD100				  Near	 _TEXT:0098
+GSD100				  Near	 _TEXT:00BB
+GSD160				  Near	 _TEXT:00C7
+GSD200				  Near	 _TEXT:00D0
+GSF100				  Near	 _TEXT:0219
+GSF200				  Near	 _TEXT:0222
+GSF300				  Near	 _TEXT:0225
+GSF400				  Near	 _TEXT:0229
+HANDLERPTR			  Word	 DGROUP:---- Extern
+HANDLERSTD			  Near	 ----:---- Extern
+IF100				  Near	 _TEXT:001A
+IF200				  Near	 _TEXT:001B
+INITPTR				  Word	 DGROUP:---- Extern
+ISFILE				  Near	 _TEXT:0000
+KEYPRESSED			  Near	 ----:---- Extern
+LEN				  Near	 ----:---- Extern
+MOUSEHIDE			  Near	 ----:---- Extern
+MOUSESHOW			  Near	 ----:---- Extern
+NORM				  Word	 DGROUP:0104
+OUTDB				  Near	 ----:---- Extern
+OUTSTR				  Near	 ----:---- Extern
+PAUSE				  Near	 ----:---- Extern
+PUTBLOCK			  Near	 ----:---- Extern
+SELECTFIRST			  Near	 _TEXT:005B
+SETCURDIR			  Near	 ----:---- Extern
+SF1000				  Near	 _TEXT:031E
+SF1100				  Near	 _TEXT:032D
+SF120				  Near	 _TEXT:027E
+SF1200				  Near	 _TEXT:0330
+SF1250				  Near	 _TEXT:0337
+SF130				  Near	 _TEXT:0281
+SF1300				  Near	 _TEXT:033E
+SF136				  Near	 _TEXT:0299
+SF140				  Near	 _TEXT:029E
+SF150				  Near	 _TEXT:02A8
+SF300				  Near	 _TEXT:02AC
+SF400				  Near	 _TEXT:02BC
+SF500				  Near	 _TEXT:02C8
+SF600				  Near	 _TEXT:02CF
+SF610				  Near	 _TEXT:02F2
+SF700				  Near	 _TEXT:02F7
+SF710				  Near	 _TEXT:0319
+SHADOW				  Near	 ----:---- Extern
+UDN100				  Near	 _TEXT:0130
+UPDATEDIRNAME			  Near	 _TEXT:00D8
+VERTLINE			  Near	 _TEXT:01ED
+VL100				  Near	 _TEXT:01F0
+WIN2				  Near	 ----:---- Extern
+WINDOW				  Near	 ----:---- Extern
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 11
+Symbol Table
+
+
+
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0115 Word	  Public  DATA
+_TEXT				  16  033F Word	  Public  CODE
+

@@ -1,0 +1,2 @@
+vrun
+opros

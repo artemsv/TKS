@@ -1,0 +1,50 @@
+  File  Edit  Search  Run  Assemble  Debug  Tools  Options  Window  Help   14 46
+ษอ[þ]ออออออออออออออออออออออออออออออออ Help ออออออออออออออออออออออออออออออออ[]อป
+บ                                                                              
+บ  XLAT/XLATB - Translate Ü                                                    þ
+บ  ฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿                                                    ฑ
+บ                                                                              ฑ
+บ  Usage:         Description:                   Opcode:                       ฑ
+บ                                                                              ฑ
+บ   XLAT Sb        AL = xS:[BX+AL]                xxh D7h                      ฑ
+บ   XLATB          AL = DS:[BX+AL]                D7h                          ฑ
+บ                                                                              ฑ
+บ  Flags:  OF SF ZF AF PF CF TF IF DF NT RF                                    ฑ
+บ  ฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤ                                    ฑ
+บ  state:                                                                      ฑ
+บ                                                                              ฑ
+บ  CPUÿmode:  PM       RM      VM                                              ฑ
+บ  ฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤ                                    ฑ
+บ  Faults:    #SF(0)                                                           ฑ
+บ             #GP(0)   INT0D   #GP(0)                                          ฑ
+บ             #PF(ec)          #PF(ec)                                         ฑ
+บ                                                                              ฑ
+บ  Pairable: NP                                                                ฑ
+บ                                                                              
+ศอþฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฤู
+ F1 Help on help  Alt+F1 Previous topic  Shift+F1 Help index
+  File  Edit  Search  Run  Assemble  Debug  Tools  Options  Window  Help   14 46
+ษอ[þ]ออออออออออออออออออออออออออออออออ Help ออออออออออออออออออออออออออออออออ[]อป
+บ  CPUÿmode:  PM       RM      VM                                              
+บ  ฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤ                                    ฑ
+บ  Faults:    #SF(0)                                                           ฑ
+บ             #GP(0)   INT0D   #GP(0)                                          ฑ
+บ             #PF(ec)          #PF(ec)                                         ฑ
+บ                                                                              ฑ
+บ  Pairable: NP                                                                ฑ
+บ                                                                              ฑ
+บ Replaces the byte in AL with byte from a user table addressed by BX. The     ฑ
+บ original value of AL is the index into the translate table. Note that you    ฑ
+บ can specify a segment override prefix by using XLAT. The default segment is  ฑ
+บ DS: if you use XLATB.                                                        ฑ
+บ                                                                              ฑ
+บ                           Clocks                    Size                     ฑ
+บ  Operands         808x  286   386   486   586       Bytes                    ฑ
+บ  ฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤ             ฑ
+บ  table             11    5     5     4               1                       ฑ
+บ                                                                              ฑ
+บ  þ see: InstructionÿTiming                                                   ฑ
+บ         Notation                                                             þ
+บ  ÿ                                                                           
+ศอþฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฤู
+ F1 Help on help  Alt+F1 Previous topic  Shift+F1 Help index

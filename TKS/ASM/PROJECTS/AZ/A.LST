@@ -1,0 +1,50 @@
+Turbo Assembler	 Version 4.1	    06/09/96 22:57:44	    Page 1
+a.ASM
+
+
+
+      1	0000			     model small
+      2	0000			     .data
+      3	0000  41 73 73 65 6D 62	6C+    string db 'Assembler',13,10,'$'
+      4	      65 72 0D 0A 24
+      5	000C			     .code
+      6	0000  B8 0000s		       mov ax,@data
+      7	0003  8E D8		       mov ds,ax
+      8	0005  BA 0000r		       lea dx,string
+      9	0008  B4 09		       mov ah,9
+     10	000A  CD 21		       int 21h
+     11	000C  B4 4C		       mov ah,4ch
+     12	000E  CD 21		       int 21h
+     13				     end
+Turbo Assembler	 Version 4.1	    06/09/96 22:57:44	    Page 2
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "06/09/96"
+??FILENAME			  Text	 "a	  "
+??TIME				  Text	 "22:57:44"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 A
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+STRING				  Byte	 DGROUP:0000
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  000C Word	  Public  DATA
+_TEXT				  16  0010 Word	  Public  CODE
+

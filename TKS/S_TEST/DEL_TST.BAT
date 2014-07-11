@@ -1,0 +1,10 @@
+del c:\users\user_01\tst\txt.*
+del c:\users\user_02\tst\txt.*
+del c:\users\user_03\tst\txt.*
+del c:\users\user_04\tst\txt.*
+del c:\users\user_05\tst\txt.*
+del c:\users\user_06\tst\txt.*
+del c:\users\user_07\tst\txt.*
+del c:\users\user_08\tst\txt.*
+del c:\users\user_09\tst\txt.*
+del c:\users\user_10\tst\txt.*

@@ -1,0 +1,18 @@
+set talk off
+pr=0
+@ 12,12 say "Для выхода-ESC'
+do while pr<5
+   @ 4,12 prompt '1.Запись данных в Бд'
+   @ 5,12 prompt '2.Вывод Формы-1'
+   @ 6,12 prompt '3 Вывод Формы-2'
+   @ 7,12 prompt '4.Вывод Формы-3'
+   menu to pr
+   if pr=0
+      clear all
+      exit
+   endif
+   if pr=1
+      use jun1
+      disp all
+   enddo
+

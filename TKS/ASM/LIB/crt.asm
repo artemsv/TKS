@@ -1,0 +1,161 @@
+;       модуль с процедурами управления дисплеем и клавиатурой
+;	(c) Copyright 2002 by Sokolov Artem
+;	дата создания:     05.12.02
+
+.model small
+.386
+.code
+
+	extrn GetStart:proc
+
+PUBLIC CaretInsert,CaretNormal,CaretShow,CaretHide,Cls,OverScan,Writeln,GotoXY
+PUBLIC WhereXy,Readln,KeyPressed,Pause,ReadKey,FillWord,FillByte,OutDW,OutDB
+
+CaretInsert :
+	mov ch,00000010B
+	jmp short Caret1
+CaretHide:
+	mov cx,2000h
+	jmp short Caret1
+CaretShow:
+CaretNormal:
+	mov ch,00001110B
+Caret1:
+	mov ah,1
+	xor cl,cl
+	jmp short int10hRET
+
+OverScan:
+	mov ax,1001h
+	jmp short int10hRET
+	
+Cls:  				; очищает экран
+  	cld
+	mov ax,0B800H
+  	mov es,ax
+  	mov di,0
+  	mov cx,2000
+  	mov al,32
+  	mov ah,7
+  	rep stosw
+  	ret
+
+Writeln:			; выводит строку с ограничительным символом
+  	mov ah,9
+  	int 21h
+  	ret 
+
+GotoXY:					;позицион-е курсора;DH-row,DL-column
+  	mov bh,0			;номер страницы
+  	mov ah,2
+int10hRET:
+	int 10h
+	ret
+
+WhereXY:				;возвращает: DH-row,DL-column
+  	mov bh,0
+  	mov ah,3
+	jmp short int10hRET
+
+Readln:					;ввод строки произвольной длины 
+;на входе:
+;dx - адрес строки куда будет помещен ввод
+;cl - максимальная длина вводимой строки
+;на выходе - введенная строка по адресу dx
+;bx - длина введенной строки
+        push si
+	mov di,dx
+  	mov [di],cl 		;в первый символ строки-длину буфера  
+        mov ah,0ah		;функция ввода строки с клавиатуры
+  	int 21h	;после прерывания в buf[0]-заявленная длина,в buf[1]-реальная
+  	mov al,[di+1]
+  	mov cl,al	;длина введенной строки в al
+	;сдвиг buf на два байта влево:
+  	push	ds
+  	pop	es
+  	mov	si,di
+  	add 	si,2
+  	cld
+  	rep	movsb
+  	xor	cx,cx
+  	mov   cl,al
+  	mov   bx,cx
+  	pop si
+	ret
+
+KeyPressed:				;если AL=0,то в AH-расширенный код
+        push dx
+  	mov ah,6
+  	mov dl,0FFH
+  	int 21h
+  	jz short no_char            	;нет ввода
+  	cmp al,0			;расширенный код
+  	je short ext_char
+  	mov ah,0
+no_char:
+	pop dx
+  	ret
+ext_char:
+  	int 21h				;получаем второй байт
+  	mov ah,1
+	pop dx
+  	ret
+
+Pause:
+  	mov ah,1
+  	int 21h
+  	ret
+
+FillWord:			;DX-верхний угол,CX-кол-во слов,AX-слово
+	push es di si cx
+	call GetStart
+	rep stosw
+	pop cx si di es
+   	ret 
+
+FillByte:			;DX-верхний угол,CX-кол-во слов,AL-байт
+	push es di
+	call GetStart
+FB100:
+	stosb
+   	inc di
+   	loop FB100
+	pop di es
+   	ret 
+
+OutDB:				;DX-верхний угол,CX-длина,SI-строка источник
+	push es di cx
+	pushf                   ;если CF сброшен,атрибут не учитывать
+	call GetStart
+	popf
+	cld
+ODB100:	pushf
+	cmp byte ptr [si],13
+	je short ODB400
+	cmp byte ptr [si],0
+	je short ODB400
+	movsb
+	popf
+	jnc short ODB200
+	stosb
+	jmp short ODB300
+ODB200:	inc di
+ODB300: loop ODB100
+	jmp short ODB500
+ODB400:	popf
+ODB500:	pop cx di es
+	ret 
+
+OutDW :
+	push es di
+	call GetStart
+	rep movsw
+	pop di es
+   	ret
+
+ReadKey:			;при возврате уст. ZF=1,если расшир.клавиша
+  	mov ah,0		;тогда в AH - расширенный код
+	int 16h			;если ZF=0,тогда в AL ASCII-код,в AH scan-код
+;	cmp al,0                
+	ret
+end

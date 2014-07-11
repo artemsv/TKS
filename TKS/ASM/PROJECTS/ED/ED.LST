@@ -1,0 +1,597 @@
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 1
+d:\asm\projects\ed\ed.ASM
+
+
+
+      1	    0000			 .model	small					 ;editor.asm	 17.12.02
+      2					 .386
+      3
+
+				   extrn InitStd:proc,	   HandlerStd:proc
+				   extrn InitExe:proc,	   IOError:proc,       +
+				   extrn Win1:proc,	   ReadKey:proc,       +
+				   extrn OutDW:proc,	   OutDB:proc,	       +
+				   extrn KeyPressed:proc,  FillByte:proc,      +
+				   extrn GetMem:proc,	   Up:proc,	       +
+				   extrn MouseShow:proc,   InsertText:proc,    +
+				   extrn GoEnd:proc,	   FileOpen:proc,      +
+				   extrn FileRead:proc,	   FileClose:proc,     +
+				   extrn MsgBox:proc,	   CountLines:proc,    +
+				   extrn LineStart:proc,   CaretHide:proc,     +
+				   extrn UserScreen:proc,  BufL:proc,	       +
+				   extrn NextChar:proc,	   PrevChar:proc,      +
+				   extrn Minus:proc,	   Down:proc,	       +
+				   extrn CtrlT:proc,	   CtrlR:proc,	       +
+				   extrn FileDialog:proc,  CtrlRight:proc,     +
+				   extrn PgDown:proc,	   PgUp:proc,	       +
+				   extrn RestoreSelf:proc, Menu:proc,	       +
+				   extrn CtrlDel:proc,	   GetCurY:proc,       +
+				   extrn fileTMP:byte,	   Window:proc,	       +
+				   extrn CaretInsert:proc,		       +
+				   public x,y,firstLine,curPtr,bufSize,Flag,   +
+      0000			   .stack 300
+      0000			   .data
+				   extrn MsgSaveFile:byte, MsgYes:byte,	       +
+				   extrn msgOverrite:byte,msgAbout:byte,       +
+      0000  ????			   w	   dw	   ?
+      0002  02				   Y	   db	   2
+      0003  01				   X	   db	   1
+      0004  0000			   margin  dw	   0		       +
+      0006  0000			   firstLine	   dw	   0	       +
+      0008  0000			   bufSize dw	   0		       +
+      000A  0000			   curPtr  dw	   0		       +
+      000C  0000			   flag	   dw	   00000000B	       +
+      000E  0000			   total   dw	   0		       +
+      0010  64 3A 5C 61	73 6D 5C+	   tasm_f  db 'd:\asm\tasm.exe',0,28,' +
+      003E  64 3A 5C 61	73 6D 5C+	   link_f  db 'd:\asm\tlink.exe',0,20, +
+      0065  64 3A 5C 61	73 6D 5C+	   td_f	   db 'd:\asm\td2.exe',0
+      0074  64 3A 5C 61	73 6D 5C+	   asm_f   db			       +
+      008E  20 54 79 70	65 20 45+	   invite  db '	Type EXIT to return    +
+      00AE  63 3A 5C 63	6F 6D 6D+	   command db 'c:\command.com',0
+      00BD  ????			   buf	   dw	   ?		       +
+      00BF			   .code
+
+      0000  E8 0000e		   start:  call	InitExe		   ;настройка  +
+      0003  6A 22			   push	34
+      0005  E8 0000e			   call	MouseInit
+      0008  E8 0000e			   call	MouseShow
+      000B  E8 0000e			   call	Init
+      000E  BB 0800			   mov bx,2048			   ;32 +
+      0011  E8 0000e			   call	GetMem
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 2
+d:\asm\projects\ed\ed.ASM
+
+
+
+      0014  8E E8			   mov gs,ax			       +
+      0016  8E C0			   mov es,ax			       +
+      0018  B9 4000			   mov cx,2048*8		   ;32 +
+      001B  B8 2020			   mov ax,2020h			       +
+      001E  FC				   cld
+      001F  33 FF			   xor di,di
+      0021  F3>	AB			   rep stosw			       +
+      0023  BB 0FA0			   mov bx,4000
+      0026  E8 0000e			   call	GetMem
+      0029  A3 00BDr			   mov buf,ax
+      002C  BA 0328			   mov dx,0808
+      002F  E8 0000e			   call	GotoXY
+      0032  E8 0287			   call	DrawLines
+      0035  E8 0000e			   call	UpdateCaretPos
+      0038			   main_loop:			   ;цикл       +
+      0038  E8 0000e			   call	UpdateMemory
+      003B  E8 0000e			   call	GetMouseInfo
+      003E  73 05			   jnc short @@1
+      0040  E8 020A			   call	MouseEvent
+      0043  EB F3			   jmp main_loop
+      0045  E8 0000e		   @@1:	   call	KeyPressed	   ;получить   +
+      0048  74 EE			   jz short main_loop	   ;символ не  +
+      004A  80 FC 01			   cmp ah,1
+      004D  75 05			   jne short @@2	   ;расширенная+
+      004F  E8 0080			   call	ExtCode		   ;введен     +
+      0052  EB E4			   jmp short main_loop
+      0054  E8 000C		   @@2:	   call	NormCode
+      0057  EB DF			   jmp short main_loop
+      0059  0F A8		   quit:   push	gs
+      005B  07				   pop es
+      005C  E8 0000e			   call	FreeMem
+      005F  B4 4C			   mov ah,4ch
+      0061  CD 21			   int 21h
+
+      0063			   NormCode:
+      0063  3C 0D			   cmp al,13
+      0065  75 1A			   jne short NC100
+      0067  E8 0000e			   call	InsertText
+      006A  B0 0A			   mov al,10
+      006C  E8 0000e			   call	InsertText
+      006F  80 3E 0002r	16		   cmp Y,22
+      0074  74 4C			   je short NC500
+      0076  C6 06 0003r	01		   mov X,1
+      007B  FE 06 0002r			   inc Y
+      007F  EB 41			   jmp short NC500
+      0081			   NC100:
+      0081  3C 08			   cmp al,8
+      0083  75 05			   jne short NC200		   ;это+
+      0085  E8 0000e			   call	Back
+      0088  EB 38			   jmp short NC500
+      008A			   NC200:
+      008A  3C 19			   cmp al,25			       +
+      008C  75 05			   jne short NC250
+      008E  E8 0000e			   call	CtrlY
+      0091  EB 2F			   jmp short NC500
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 3
+d:\asm\projects\ed\ed.ASM
+
+
+
+      0093			   NC250:
+      0093  3C 14			   cmp al,20			       +
+      0095  75 05			   jne short NC300
+      0097  E8 0000e			   call	CtrlT
+      009A  EB 26			   jmp short NC500
+      009C			   NC300:
+      009C  3C 12			   cmp al,18			       +
+      009E  75 05			   jne short NC310
+      00A0  E8 0000e			   call	CtrlR
+      00A3  EB 1D			   jmp short NC500
+      00A5  3C 7F		   NC310:  cmp al,127			       +
+      00A7  75 08			   jne short NC400
+      00A9  BB 0064			   mov bx,100
+      00AC  E8 0000e			   call	GetMem
+      00AF  EB 11			   jmp short NC500
+      00B1			   NC400:
+      00B1  E8 0000e			   call	InsertText
+      00B4  E8 0205			   call	DrawLines
+      00B7  80 3E 0003r	4E		   cmp x,78
+      00BC  74 04			   je short NC500
+      00BE  FE 06 0003r			   inc x
+      00C2			   NC500:
+      00C2  E8 0000e			   call	UpdateCaretPos
+      00C5  E8 0000e			   call	PosFromChar
+      00C8  E8 01F1			   call	DrawLines
+      00CB  0F BA 2E 000Cr 01		   bts flag,1			       +
+      00D1  C3			   NC600:  ret
+
+      00D2			   ExtCode:
+      00D2  86 C1			   xchg	al,cl			       +
+      00D4  B4 02			   mov ah,2
+      00D6  CD 16			   int 16h			       +
+      00D8  86 C4			   xchg	al,ah			       +
+      00DA  86 C8			   xchg	cl,al			       +
+      00DC  3C 3B			   cmp al,59			   ;F1
+      00DE  75 09			   jne short EC100
+      00E0  BE 0000e			   lea si,msgAbout
+      00E3  E8 0000e			   call	MsgBox
+      00E6  E9 0160			   jmp EC700
+      00E9			   EC100:
+      00E9  3C 3C			   cmp al,60			   ;F2
+      00EB  75 06			   jne short EC200
+      00ED  E8 0262			   call	SaveFile
+      00F0  E9 0156			   jmp EC700
+      00F3			   EC200:
+      00F3  3C 3D			   cmp al,61			   ;F3
+      00F5  75 06			   jne short EC210
+      00F7  E8 02C0			   call	OpenFile
+      00FA  E9 0149			   jmp EC699
+      00FD			   EC210:
+      00FD  3C 3E			   cmp al,62			   ;F4
+      00FF  75 06			   jne short EC220
+      0101  E8 02EC			   call	Tasm
+      0104  E9 0142			   jmp EC700
+      0107			   EC220:
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 4
+d:\asm\projects\ed\ed.ASM
+
+
+
+      0107  3C 3F			   cmp al,63			   ;F5
+      0109  75 06			   jne short EC230
+      010B  E8 0309			   call	Lib
+      010E  E9 0138			   jmp EC700
+      0111			   EC230:
+      0111  3C 40			   cmp al,64			   ;F6
+      0113  75 09			   jne short EC240
+      0115  BF 0065r			   lea di,td_f
+      0118  E8 0000e			   call	Exec
+      011B  E9 012B			   jmp EC700
+      011E			   EC240:
+      011E  3C 41			   cmp al,65			   ;F7
+      0120  75 03			   jne short EC250
+      0122  E9 0124			   jmp EC700
+      0125			   EC250:
+      0125  3C 42			   cmp al,66			   ;F8
+      0127  75 15			   jne short EC260
+      0129  E8 0000e			   call	RestoreUser
+      012C  BA 008Er			   lea dx,invite
+      012F  E8 0000e			   call	Writeln
+      0132  BF 00AEr			   lea di,command
+      0135  E8 0000e			   call	Exec
+      0138  E8 0000e			   call	RestoreSelf
+      013B  E9 010B			   jmp EC700
+      013E			   EC260:
+      013E  3C 43			   cmp al,67			   ;F9
+      0140  75 06			   jne short EC270
+      0142  E8 02C1			   call	Run
+      0145  E9 0101			   jmp EC700
+      0148			   EC270:
+      0148  3C 44			   cmp al,68			   ;F10
+      014A  75 06			   jne short EC280
+      014C  E8 0000e			   call	Menu
+      014F  E9 00F7			   jmp EC700
+      0152			   EC280:
+      0152  3C 85			   cmp al,85h			   ;F11
+      0154  75 03			   jne short EC290
+      0156  E9 00F0			   jmp EC700
+      0159			   EC290:
+      0159  3C 86			   cmp al,86h			   ;F12
+      015B  75 06			   jne short EC300
+      015D  E8 0000e			   call	GetCurY
+      0160  E9 00E6			   jmp EC700
+      0163			   EC300:
+      0163  3C 2D			   cmp al,45			   ;ALt+
+      0165  75 06			   jne short EC302
+      0167  E8 01E8			   call	SaveFile
+      016A  E9 FEEC			   jmp quit
+      016D			   EC302:
+      016D  3C 48			   cmp al,72			       +
+      016F  75 12			   jne short EC400
+      0171  F6 C4 0B			   test	ah,11			       +
+      0174  74 03			   jz short EC310
+					   ;Shift+Up
+      0176  E9 00CD			   jmp EC699
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 5
+d:\asm\projects\ed\ed.ASM
+
+
+
+      0179			   EC310:
+      0179  E8 0000e			   call	Up
+      017C  0F 82 00C6			   jc EC699
+      0180  EB 2B 90			   jmp EC600
+      0183			   EC400:
+      0183  3C 4B			   cmp al,75			       +
+      0185  75 11			   jne short EC500
+      0187  F6 C4 0B			   test	ah,11
+      018A  74 03			   jz short EC410
+					   ;Shift+left
+      018C  E9 00BA			   jmp EC700
+      018F			   EC410:
+      018F  E8 0000e			   call	Minus
+      0192  E8 0000e			   call	UpdateCaretPos
+      0195  E9 00AE			   jmp EC699
+      0198			   EC500:
+      0198  3C 4D			   cmp al,77			       +
+      019A  75 11			   jne short EC600
+      019C  F6 C4 0B			   test	ah,11
+      019F  74 03			   jz short EC510
+					   ;Shift+right
+      01A1  E9 00A2			   jmp EC699
+      01A4			   EC510:
+      01A4  E8 0000e			   call	Plus
+      01A7  E8 0000e			   call	UpdateCaretPos
+      01AA  E9 009C			   jmp EC700
+      01AD			   EC600:
+      01AD  3C 50			   cmp al,80			       +
+      01AF  75 12			   jne short EC610
+      01B1  F6 C4 0B			   test	ah,11
+      01B4  74 03			   jz short EC606
+					   ;Shift+down
+      01B6  E9 008D			   jmp EC699
+      01B9			   EC606:
+      01B9  E8 0000e			   call	Down
+      01BC  0F 82 0086			   jc EC699
+      01C0  E9 0086			   jmp EC700
+      01C3			   EC610:
+      01C3  3C 6C			   cmp al,108			   ;Alt+
+      01C5  75 05			   jne short EC660
+      01C7  E8 0000e			   call	UserScreen
+      01CA  EB 7D			   jmp short EC700
+      01CC			   EC660:
+      01CC  3C 49			   cmp al,73			   ;PgUp
+      01CE  75 05			   jne short EC662
+      01D0  E8 0000e			   call	PgUp
+      01D3  EB 71			   jmp short EC699
+      01D5			   EC662:
+      01D5  3C 51			   cmp al,81			       +
+      01D7  75 12			   jne short EC665
+      01D9  B9 0016			   mov cx,22
+      01DC			   EC664:
+      01DC  51				   push	cx
+      01DD  E8 0000e			   call	Down
+      01E0  E8 00D9			   call	DrawLines
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 6
+d:\asm\projects\ed\ed.ASM
+
+
+
+      01E3  E8 0000e			   call	UpdateCaretPos
+      01E6  59				   pop cx
+      01E7  E2 F3			   loop	EC664
+				   ;	   call	PgDown
+      01E9  EB 5B			   jmp short EC699
+      01EB			   EC665:
+      01EB  3C 52			   cmp al,82			       +
+      01ED  75 18			   jne short EC669
+      01EF  B9 0008			   mov cx,8
+      01F2  BA 1745			   mov dx,1745h
+      01F5  0F BA 3E 000Cr 00		   btc flag,0
+      01FB  72 05			   jc short EC667
+      01FD  E8 0000e			   call	CaretInsert
+      0200  EB 47			   jmp short EC700
+      0202  E8 0000e		   EC667:  call	CaretNormal
+      0205  EB 42			   jmp short EC700
+      0207			   EC669:
+      0207  3C 53			   cmp al,83			       +
+      0209  75 0B			   jne short EC670
+      020B  E8 0000e			   call	Delete
+      020E  0F BA 2E 000Cr 01		   bts flag,1			       +
+      0214  EB 30			   jmp short EC699
+      0216			   EC670:
+      0216  3C 93			   cmp al,93h			       +
+      0218  75 0B			   jne short EC671
+      021A  E8 0000e			   call	CtrlDel
+      021D  0F BA 2E 000Cr 01		   bts flag,1			       +
+      0223  EB 21			   jmp short EC699
+      0225			   EC671:
+      0225  3C 47			   cmp al,71			   ;Home
+      0227  75 05			   jne short EC672
+      0229  E8 0000e			   call	Home
+      022C  EB 1B			   jmp short EC700
+      022E			   EC672:
+      022E  3C 4F			   cmp al,79			   ;End
+      0230  75 05			   jne short EC674
+      0232  E8 0000e			   call	GoEnd
+      0235  EB 12			   jmp short EC700
+      0237			   EC674:
+      0237  3C 74			   cmp al,116			       +
+      0239  75 05			   jne short EC676
+      023B  E8 0000e			   call	CtrlRight
+      023E  EB 06			   jmp short EC699
+      0240			   EC676:
+      0240  3C 73			   cmp al,115			       +
+      0242  75 02			   jne short EC678
+      0244  EB 03			   jmp short EC700
+      0246			   EC678:
+      0246  E8 0073		   EC699:  call	DrawLines
+      0249  E8 0000e		   EC700:  call	UpdateCaretPos
+      024C  C3				   ret
+
+      024D			   MouseEvent:				   ;b  +
+      024D  80 FC 18			   cmp ah,24			       +
+      0250  75 39			   jne short ME100
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 7
+d:\asm\projects\ed\ed.ASM
+
+
+
+      0252  3C 3C			   cmp al,60
+      0254  72 05			   jb short ME010
+      0256  E8 0000e			   call	UserScreen
+      0259  EB 60			   jmp short ME300
+      025B			   ME010:
+      025B  3C 32			   cmp al,50
+      025D  72 05			   jb short ME020
+      025F  E8 0000e			   call	Menu			   ;F10
+      0262  EB 57			   jmp short ME300
+      0264			   ME020:
+      0264  3C 2A			   cmp al,42
+      0266  72 05			   jb short ME030
+      0268  E8 019B			   call	Run			   ;F9
+      026B  EB 4E			   jmp short ME300
+      026D			   ME030:
+      026D  3C 1D			   cmp al,29
+      026F  72 05			   jb short ME040
+      0271  E8 017C			   call	Tasm			   ;F4
+      0274  EB 45			   jmp short ME300
+      0276			   ME040:
+      0276  3C 14			   cmp al,20
+      0278  72 05			   jb short ME050
+      027A  E8 013D			   call	OpenFile		   ;F3
+      027D  EB 3C			   jmp short ME300
+      027F			   ME050:
+      027F  3C 0B			   cmp al,11
+      0281  72 05			   jb short ME060
+      0283  E8 00CC			   call	SaveFile		   ;F2
+      0286  EB 33			   jmp short ME300
+      0288			   ME060:
+      0288  E9 FDCE			   jmp quit			   ;Да
+      028B			   ME100:
+      028B  80 FC 00			   cmp ah,0
+      028E  74 23			   je short ME200
+      0290  3C 00			   cmp al,0
+      0292  74 27			   je short ME400		       +
+      0294  3C 4F			   cmp al,79
+      0296  74 23			   je short ME400		       +
+      0298  80 FC 01			   cmp ah,1
+      029B  74 1E			   je short ME400
+      029D  80 FC 17			   cmp ah,23
+      02A0  74 19			   je short ME400		       +
+      02A2  80 FC 18			   cmp ah,24
+      02A5  74 14			   je short ME300
+      02A7  88 26 0002r			   mov Y,ah
+      02AB  A2 0003r			   mov X,al
+      02AE  E8 0000e			   call	CharFromPos		       +
+      02B1  EB 08			   jmp short ME400
+      02B3			   ME200:				       +
+      02B3  E8 0000e			   call	GetMouseInfo
+      02B6  72 FB			   jc short ME200
+      02B8  E8 00FF			   call	OpenFile
+      02BB			   ME300:				       +
+      02BB  C3			   ME400:  ret
+
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 8
+d:\asm\projects\ed\ed.ASM
+
+
+
+      02BC			   DrawLines:
+      02BC  8B 2E 0008r			   mov bp,bufSize
+      02C0  A1 000Ar			   mov ax,curPtr
+      02C3  50				   push	ax
+      02C4  E8 0000e			   call	MouseHide
+      02C7  E8 0000e			   call	ClearWorkArea
+      02CA  8B 0E 0006r			   mov cx,firstLine		       +
+      02CE  C7 06 000Ar	0000		   mov curPtr,0			       +
+      02D4  E3 05			   jcxz	DL200			       +
+      02D6			   DL100:				       +
+      02D6  E8 0000e			   call	NextLine
+      02D9  E2 FB			   loop	DL100
+      02DB			   DL200:				       +
+      02DB  8B 36 000Ar			   mov si,curPtr
+      02DF  1E				   push	ds
+      02E0  BA 0201			   mov dx,0201h			       +
+      02E3  0F A8			   push	gs
+      02E5  1F				   pop ds			       +
+      02E6			   DL300:
+      02E6  E8 0000e			   call	OutStr
+      02E9  83 C6 02			   add si,2			       +
+      02EC  FE C6			   inc dh
+      02EE  80 FE 17			   cmp dh,23			       +
+      02F1  74 02			   je short DL400
+      02F3  EB F1			   jmp DL300
+      02F5			   DL400:
+      02F5  1F				   pop ds
+      02F6  58				   pop ax
+      02F7  A3 000Ar			   mov curPtr,ax
+      02FA  E8 0000e			   call	MouseShow
+      02FD  C3				   ret
+
+      02FE			   ReadFile :
+      02FE  1E				   push	ds
+      02FF  BA 0000e			   lea dx,file
+      0302  B0 00			   mov al,0
+      0304  E8 0000e			   call	FileOpen
+      0307  73 06			   jnc short RF100
+      0309  E8 0000e			   call	IOError
+      030C  F9				   stc
+      030D  EB 1D			   jmp short RF200
+      030F  50			   RF100:  push	ax			       +
+      0310  8B D8			   mov bx,ax
+      0312  E8 0000e			   call	FileSize
+      0315  72 15			   jc short RF200
+      0317  8B C8			   mov cx,ax
+      0319  A3 0008r			   mov bufSize,ax		       +
+      031C  0F A8			   push	gs
+      031E  1F				   pop ds			   ;в  +
+      031F  BA 0000			   mov dx,0			   ;в  +
+      0322  5B				   pop bx			       +
+      0323  E8 0000e			   call	FileRead
+      0326  72 04			   jc short RF200
+      0328  E8 0000e			   call	FileClose
+      032B  F8				   clc				       +
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 9
+d:\asm\projects\ed\ed.ASM
+
+
+
+      032C  1F			   RF200:  pop ds
+      032D  C3				   ret
+
+      032E			   WriteFile:
+      032E  1E 52 53 51			   push	ds dx bx cx
+      0332  BA 0000e			   lea dx,file
+      0335  E8 0000e			   call	FileCreate
+      0338  72 13			   jc short WF100
+      033A  8B D8			   mov bx,ax
+      033C  8B 0E 0008r			   mov cx,bufSize
+      0340  0F A8			   push	gs
+      0342  1F				   pop ds
+      0343  33 D2			   xor dx,dx			       +
+      0345  E8 0000e			   call	FileWrite
+      0348  72 03			   jc short WF100
+      034A  E8 0000e			   call	FileClose
+      034D  59 5B 5A 1F		   WF100:  pop cx bx dx	ds
+      0351  C3				   ret
+
+      0352			   SaveFile:
+      0352  0F BA 26 000Cr 01		   bt flag,1			       +
+      0358  73 5F			   jnc short SF700
+      035A  E8 0000e			   call	CaretHide
+      035D  A1 00BDr			   mov ax,buf			       +
+      0360  BA 0715			   mov dx,0715h
+      0363  BB 0828			   mov bx,0828h
+      0366  B8 7F20			   mov ax,7F20h
+      0369  BF 0000e			   lea di,InitStd
+      036C  89 3E 0000e			   mov word ptr	initPtr,di
+      0370  BF 0000e			   lea di,HandlerStd
+      0373  89 3E 0000e			   mov word ptr	handlerPtr,di
+      0377  F8				   clc
+      0378  E8 0000e			   call	Window
+      037B  52				   push	dx
+      037C  BA 091B			   mov dx,091Bh
+      037F  B9 001C			   mov cx,28
+      0382  BE 0000e			   lea si,msgSaveFile
+      0385  B0 70			   mov al,70h
+      0387  F9				   stc				       +
+      0388  E8 0000e			   call	OutDB
+      038B  BA 0C19			   mov dx,0C19h
+      038E  BE 0000e			   lea si,msgYes
+      0391  F9				   stc				       +
+      0392  E8 0000e			   call	Button
+      0395  80 C2 0C			   add dl,12
+      0398  BE 0000e			   lea si,msgNo
+      039B  F8				   clc
+      039C  E8 0000e			   call	Button
+      039F  80 C2 0C			   add dl,12
+      03A2  BE 0000e			   lea si,msgCancel
+      03A5  F8				   clc
+      03A6  E8 0000e			   call	Button
+      03A9  E8 0000e			   call	ReadKey
+      03AC  5A				   pop dx
+      03AD  A1 00BDr			   mov ax,buf
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 10
+d:\asm\projects\ed\ed.ASM
+
+
+
+      03B0  E8 0000e			   call	PutBlock
+      03B3  E8 0000e			   call	CaretShow
+      03B6			   SF100:
+      03B6  E8 FF75			   call	WriteFile
+      03B9			   SF700:
+      03B9  C3				   ret
+
+      03BA			   OpenFile:
+      03BA  E8 0000e			   call	FileDialog
+      03BD  3D 0003			   cmp ax,3			       +
+      03C0  74 22			   je short OF200
+      03C2  E8 0000e			   call	ClearFileName
+      03C5  1E				   push	ds
+      03C6  07				   pop es
+      03C7  BE 0000e			   lea si,fileTMP
+      03CA  BF 0000e			   lea di,file
+      03CD  A4			   OF100:  movsb
+      03CE  80 3C 00			   cmp byte ptr	[si],0
+      03D1  75 FA			   jne short OF100
+      03D3  E8 0000e			   call	UpdateFileName
+      03D6  E8 FF25			   call	ReadFile
+      03D9  72 09			   jc short OF200
+      03DB  E8 FEDE			   call	DrawLines
+      03DE  0F BA 36 000Cr 01		   btr flag,1			       +
+      03E4  C3			   OF200:  ret
+
+      03E5			   Debugger:
+      03E5  E8 0000e			   call	RestoreUser
+      03E8  E8 FF43			   call	WriteFile
+      03EB  BF 0065r			   lea di,td_f
+      03EE  EB 09			   jmp short T100
+
+      03F0  E8 0000e		   Tasm:   call	RestoreUser
+      03F3  E8 FF38			   call	WriteFile
+      03F6  BF 0010r			   lea di,tasm_f
+      03F9  E8 0000e		   T100:   call	Exec
+      03FC  E8 0000e			   call	ReadKey
+      03FF  E8 0000e			   call	RestoreSelf
+      0402  E8 FEB7			   call	DrawLines
+      0405  C3				   ret
+
+      0406  E8 0000e		   Run:	   call	RestoreUser
+      0409  0F A8			   push	gs
+      040B  BF 0074r			   lea di,asm_f
+      040E  E8 0000e			   call	Exec
+      0411  0F A9			   pop gs
+      0413  E8 0000e			   call	RestoreSelf
+      0416  C3				   ret
+      0417  C3			   Lib:	   ret
+
+				   end start
+

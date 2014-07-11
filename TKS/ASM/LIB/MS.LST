@@ -1,0 +1,141 @@
+Turbo Assembler	 Version 4.1	    04/09/96 20:49:43	    Page 1
+ms.ASM
+
+
+
+      1	    0000			 .model	small
+      2					 .386
+      3	    0000			 .code
+      4
+      5					 PUBLIC	MouseShow,MouseInit,MouseHide,MouseSetPos,GetMouseInfo,MouseButtons
+      6					 PUBLIC	MouseRelease,MouseWhere
+      7
+      8	    0000			 MouseShow:
+      9	    0000  B8 0001			 mov ax,1
+     10	    0003  CD 33				 int 33h
+     11	    0005  C3				 ret
+     12
+     13	    0006			 MouseHide:
+     14	    0006  B8 0002			 mov ax,2
+     15	    0009  CD 33				 int 33h
+     16	    000B  C3				 ret
+     17
+     18	    000C			 MouseInit:
+     19	    000C  B8 0000			 mov ax,0
+     20	    000F  CD 33				 int 33h
+     21	    0011  C3				 ret
+     22
+     23	    0012			 MouseSetPos:			 ;в CX - горизонтальная,в DX - вертикальная
+     24	    0012  B8 0004			 mov ax,04h
+     25	    0015  CD 33				 int 33h
+     26	    0017  C3				 ret
+     27
+     28	    0018			 GetMouseInfo:		 ;возвр.: в AH - координата по Y ,в AL - по X
+     29	    0018  52 53	51			 push dx bx cx	 ;устанавливает	CF если	нажата левая кнопка
+     30	    001B  B8 0003			 mov ax,03h
+     31	    001E  CD 33				 int 33h
+     32	    0020  53				 push bx		 ;сохраняем байт статуса
+     33	    0021  B3 08				 mov bl,8		 ;высота
+     34	    0023  8B C2				 mov ax,dx
+     35	    0025  F6 F3				 div bl
+     36	    0027  8A F8				 mov bh,al		 ;в BH - координата по Y
+     37	    0029  8B C1				 mov ax,cx
+     38	    002B  F6 F3				 div bl			 ;в AL - координата по X
+     39	    002D  8A E7				 mov ah,bh		 ;в AH - координата по Y
+     40	    002F  5B				 pop bx			 ;восстанавливаем байт статуса
+     41	    0030  F6 C3	01			 test bl,1
+     42	    0033  75 06				 jne short GMI100
+     43	    0035  59 5B	5A			 pop cx	bx dx
+     44	    0038  F8				 clc
+     45	    0039  EB 04				 jmp short GMI200
+     46	    003B  59 5B	5A		 GMI100: pop cx	bx dx
+     47	    003E  F9				 stc
+     48	    003F  C3			 GMI200: ret
+     49
+     50	    0040			 MouseButtons:			 ;нулевой бит в	BL=1  -	 нажата	левая кнопка
+     51	    0040  52				 push dx		 ;первый бит в BL=1  -	нажата правая кнопка
+     52	    0041  51				 push cx
+     53	    0042  B8 0005			 mov ax,5		 ;в AH - координата по Y ,в AL - по X
+     54	    0045  BB 0000			 mov bx,0
+     55	    0048  CD 33				 int 33h		 ;CX-X,DX-Y,AX-статус (0 и 1-й биты)
+     56	    004A  33 DB				 xor bx,bx
+     57	    004C  A8 00				 test al,0
+Turbo Assembler	 Version 4.1	    04/09/96 20:49:43	    Page 2
+ms.ASM
+
+
+
+     58	    004E  74 12	90 90			 je MB100
+     59	    0052  B3 08				 mov bl,8		 ;высота
+     60	    0054  8B C2				 mov ax,dx
+     61	    0056  F6 F3				 div bl
+     62	    0058  8A F8				 mov bh,al
+     63	    005A  8B C1				 mov ax,cx
+     64	    005C  F6 F3				 div bl
+     65	    005E  8A E7				 mov ah,bh
+     66	    0060  B3 01				 mov bl,1
+     67	    0062			 MB100:
+     68	    0062  59				 pop cx
+     69	    0063  5A				 pop dx
+     70	    0064  C3				 ret
+     71
+     72	    0065			 MouseRelease:
+     73	    0065  B8 0006			 mov ax,6
+     74	    0068  BB 0000			 mov bx,0
+     75	    006B  CD 33				 int 33h
+     76	    006D  C3				 ret
+     77
+     78	    006E			 MouseWhere:				 ;в AH - координата по Y ,в AL - по X
+     79	    006E  B8 0003			 mov ax,3
+     80	    0071  CD 33				 int 33h
+     81	    0073  B3 08				 mov bl,8
+     82	    0075  8B C2				 mov ax,dx
+     83	    0077  F6 F3				 div bl
+     84	    0079  8A F8				 mov bh,al
+     85	    007B  8B C1				 mov ax,cx
+     86	    007D  F6 F3				 div bl
+     87	    007F  8A E7				 mov ah,bh
+     88	    0081  C3				 ret
+     89					 end
+Turbo Assembler	 Version 4.1	    04/09/96 20:49:43	    Page 3
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "04/09/96"
+??FILENAME			  Text	 "ms	  "
+??TIME				  Text	 "20:49:43"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0F0FH
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 MS
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+GETMOUSEINFO			  Near	 _TEXT:0018
+GMI100				  Near	 _TEXT:003B
+GMI200				  Near	 _TEXT:003F
+MB100				  Near	 _TEXT:0062
+MOUSEBUTTONS			  Near	 _TEXT:0040
+MOUSEHIDE			  Near	 _TEXT:0006
+MOUSEINIT			  Near	 _TEXT:000C
+MOUSERELEASE			  Near	 _TEXT:0065
+MOUSESETPOS			  Near	 _TEXT:0012
+MOUSESHOW			  Near	 _TEXT:0000
+MOUSEWHERE			  Near	 _TEXT:006E
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+_TEXT				  16  0082 Word	  Public  CODE
+

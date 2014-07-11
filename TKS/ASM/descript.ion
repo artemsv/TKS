@@ -1,0 +1,8 @@
+AE.BAT A batch file to start ASM Edit
+DPMI16BI.OVL 16-bit DPMI host
+EXTERNAL.BAT A batch file external programs
+NEWCOM.ASM Dummy COM file
+NEWEXE.ASM Dummy EXE file
+AEO18_A.ICO An OS/2 icon file
+AEO18_B.ICO Another icon for OS/2
+DESCRIPT.ION 4DOS description file

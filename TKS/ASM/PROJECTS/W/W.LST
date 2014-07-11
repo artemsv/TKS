@@ -1,0 +1,101 @@
+w.asmw.asmTurbo Assembler	 Version 4.1	    31/08/96 17:00:39	    Page 1
+d:\asm\projects\w\w.ASM
+
+
+
+      1	0000			     .model tiny
+      2				       extrn Win1:proc,ReadKey:proc,Cls:proc,Win2:proc,WhereXY:proc,GotoXY:proc
+      3				       extrn ShowMouse:proc,InitMouse:proc,KeyPressed:proc
+      4	0000			     .code
+      5				     .startup
+1     6	0100			     @Startup:
+      7	0100  E8 0000e			     call InitMouse
+      8	0103  E8 0000e			     call ShowMouse
+      9				     ;	     call ReadKey
+     10	0106  BA 0000			     mov dx,0000h
+     11	0109  BB 1040			     mov bx,1040h
+     12	010C  E8 0000e			     call Win2
+     13	010F  E8 0000e		     key:    call WhereXY
+     14	0112  E8 0000e			     call KeyPressed
+     15	0115  74 F8			     jz	key
+     16	0117  75 F6			     jne key
+     17	0119  80 FC 50			     cmp ah,80
+     18	011C  74 16			     je	down
+     19	011E  80 FC 48			     cmp ah,72
+     20	0121  74 18			     je	up
+     21	0123  80 FC 4B			     cmp ah,75
+     22	0126  74 1A			     je	left
+     23	0128  80 FC 4D			     cmp ah,77
+     24	012B  74 1C			     je	right
+     25	012D  80 FC 44			     cmp ah,68
+     26	0130  74 1E			     je	quit
+     27	0132  EB DB			     jmp key
+     28	0134			     down:
+     29	0134  FE C6			     inc dh
+     30	0136  E8 0000e			     call GotoXY
+     31	0139  EB D4			     jmp key
+     32	013B			     up:
+     33	013B  FE CE			     dec dh
+     34	013D  E8 0000e			     call GotoXY
+     35	0140  EB CD			     jmp key
+     36	0142			     left:
+     37	0142  FE CA			     dec dl
+     38	0144  E8 0000e			     call GotoXY
+     39	0147  EB C6			     jmp key
+     40	0149			     right:
+     41	0149  FE C2			     inc dl
+     42	014B  E8 0000e			     call GotoXY
+     43	014E  EB BF			     jmp key
+     44
+     45	0150			     quit:
+     46	0150  B4 4C			     mov ah,4ch
+     47	0152  CD 21			     int 21h
+     48
+     49				     end
+Turbo Assembler	 Version 4.1	    31/08/96 17:00:39	    Page 2
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "31/08/96"
+??FILENAME			  Text	 "w	  "
+??TIME				  Text	 "17:00:39"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 DGROUP
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 W
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 1
+@STACK				  Text	 DGROUP
+@STARTUP			  Near	 DGROUP:0100
+@WORDSIZE			  Text	 2
+CLS				  Near	 ----:---- Extern
+DOWN				  Near	 DGROUP:0134
+GOTOXY				  Near	 ----:---- Extern
+INITMOUSE			  Near	 ----:---- Extern
+KEY				  Near	 DGROUP:010F
+KEYPRESSED			  Near	 ----:---- Extern
+LEFT				  Near	 DGROUP:0142
+QUIT				  Near	 DGROUP:0150
+READKEY				  Near	 ----:---- Extern
+RIGHT				  Near	 DGROUP:0149
+SHOWMOUSE			  Near	 ----:---- Extern
+UP				  Near	 DGROUP:013B
+WHEREXY				  Near	 ----:---- Extern
+WIN1				  Near	 ----:---- Extern
+WIN2				  Near	 ----:---- Extern
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+  _TEXT				  16  0154 Word	  Public  CODE
+

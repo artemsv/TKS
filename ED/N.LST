@@ -1,0 +1,199 @@
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 1
+n.ASM
+
+
+
+      1	0000			     .model small		     ;		     дата создания:  24.12.02.
+      2	0000			     .data
+      3	0000  07 0C 03 4E 65 77	0C+	     men db  7,12,3,'New',12,'Open...	F3',12,'Save	  F2'
+      4	      4F 70 65 6E 2E 2E	2E+
+      5	      20 20 20 46 33 0C	53+
+      6	      61 76 65 20 20 20	20+
+      7	      20 20 46 32
+      8	0020  0A 53 61 76 65 20	41+		 db  10,'Save As...',5,'Print',9,'DOS Shell',12,'Exit	Alt+X'
+      9	      73 2E 2E 2E 05 50	72+
+     10	      69 6E 74 09 44 4F	53+
+     11	      20 53 68 65 6C 6C	0C+
+     12	      45 78 69 74 20 20	20+
+     13	      41 6C 74 2B 58
+     14	0048			     .code
+     15					     extrn GetStart:proc,GetBlock:proc,FillBackBlock:proc,Win1:proc
+     16					     extrn Shadow:proc,GetMem:proc,ReadKey:proc,OutDB:proc,ChangeAtribut:proc
+     17					     extrn CaretHide:proc,CaretShow:proc,KeyPressed:proc,GetMouseInfo:proc
+     18					     extrn PutBlock:proc
+     19					     extrn buf:word
+     20
+     21				     PUBLIC PopupMenu,Menu
+     22
+     23	0000  56		     Menu:   push si
+     24	0001  BA 0100			     mov dx,0100h
+     25	0004  BE 0000r			     lea si,men
+     26	0007  E8 0002			     call PopupMenu
+     27	000A  5E			     pop si
+     28	000B  C3			     ret
+     29
+     30	000C			     PopupMenu:		     ;DX-угол,SI-строка	пунктов
+     31	000C  E8 0000e			     call CaretHide
+     32	000F  52			     push dx
+     33	0010  56			     push si		     ;сохраняем	начало строки описания пунктов
+     34	0011  E8 0000e			     call GetStart	     ;
+     35	0014  8A 3C			     mov bh,[si]	     ;высота меню
+     36	0016  80 C7 02			     add bh,2		     ;2	символа	на рамку
+     37	0019  8A 5C 01			     mov bl,[si+1]	     ;длина самого длинного пункта
+     38	001C  80 C3 02			     add bl,2		     ;2	символа	на рамку с двух	сторон
+     39	001F  53			     push bx		     ;сохраняем	размеры	меню
+     40	0020  2E: A1 0000e		     mov ax,buf		     ;глобальный буфер
+     41	0024  E8 0000e			     call GetBlock
+     42	0027  B8 7020			     mov ax,7020h
+     43	002A  E8 0000e			     call FillBackBlock
+     44	002D  F9			     stc
+     45	002E  E8 0000e			     call Win1
+     46	0031  E8 0000e			     call Shadow
+     47	0034  5B			     pop bx		     ;неясные движения,да?-всего навсего
+     48	0035  5E			     pop si		     ;выковыриваем из стека SI(он под BX)
+     49	0036  53			     push bx
+     50	0037  8A 04			     mov al,[si]	     ;счётчик пунктов
+     51	0039  FE C2			     inc dl		     ;координата по X первого пункта
+     52	003B  83 C6 02			     add si,2		     ;смещение строки первого пункта
+     53	003E			     PM100:
+     54	003E  33 C9			     xor cx,cx
+     55	0040  8A 0C			     mov cl,byte ptr [si]    ;длина очередного пункта
+     56	0042  FE C6			     inc dh		     ;координата Y пункта меню
+     57	0044  46			     inc si		     ;пропускаем байт длины
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 2
+n.ASM
+
+
+
+     58	0045  E8 0000e			     call OutDB
+     59	0048  FE C8			     dec al		     ;счетчик пунктов
+     60	004A  0A C0			     or	al,al
+     61	004C  74 02			     je	short PM200	     ;вывели все пункты
+     62	004E  EB EE			     jmp short PM100
+     63	0050			     PM200:
+     64	0050  5B			     pop bx
+     65	0051  5A			     pop dx		     ;восстанавливаем координаты угла
+     66	0052  52			     push dx		     ;пересохранили угол меню
+     67	0053  53			     push bx		     ;пересохранили размеры меню
+     68	0054  81 C2 0101		     add dx,0101h	     ;координаты первой	строки меню
+     69	0058  8A EE			     mov ch,dh		     ;начальная	координата пункта меню
+     70	005A  8A CE			     mov cl,dh
+     71	005C  02 CF			     add cl,bh
+     72	005E  80 E9 03			     sub cl,3		     ;CL-максим.коорд.,кот может иметь пункт меню
+     73	0061  B7 01			     mov bh,1		     ;высота пункта меню
+     74	0063  80 EB 02			     sub bl,2		     ;длина пункта меню
+     75	0066  B8 002F			     mov ax,002Fh	     ;маска
+     76	0069  E8 0000e			     call ChangeAtribut	     ;выделили первую строку меню
+     77	006C			     PM300:
+     78	006C  E8 0000e			     call GetMouseInfo
+     79	006F  72 14			     jc	short PM400
+     80	0071  E8 0000e			     call KeyPressed
+     81	0074  74 F6			     jz	short PM300
+     82	0076  80 FC 01			     cmp ah,1
+     83	0079  74 17			     je	short PM500	     ;нажата расширенная клавиша
+     84	007B  3C 0D			     cmp al,13
+     85	007D  74 06			     je	short PM400	     ;нажата клавиша Enter
+     86	007F  3C 1B			     cmp al,27
+     87	0081  74 02			     je	short PM400
+     88	0083  EB E7			     jmp short PM300
+     89	0085			     PM400:
+     90	0085  5B			     pop bx
+     91	0086  5A			     pop dx
+     92	0087  2E: A1 0000e		     mov ax,buf
+     93	008B  E8 0000e			     call PutBlock	     ;восстанавливаем экран
+     94	008E  E8 0000e			     call CaretShow
+     95	0091  C3			     ret
+     96	0092			     PM500:
+     97	0092  3C 48			     cmp al,72		     ;стрелка вверх
+     98	0094  74 18			     je	short PM800
+     99	0096  3C 50			     cmp al,80		     ;стрелка вниз
+    100	0098  74 02			     je	short PM600
+    101	009A  EB D0			     jmp short PM300
+    102	009C			     PM600:
+    103	009C  B8 70FF			     mov ax,70FFh
+    104	009F  E8 0000e			     call ChangeAtribut	     ;снимем выделение текущего	пункта меню
+    105	00A2  3A F1			     cmp dh,cl		     ;CL-максим.коорд.,кот может иметь пункт меню
+    106	00A4  74 04			     je	short PM700	     ;это самый	нижний пункт
+    107	00A6  FE C6			     inc dh
+    108	00A8  EB 14			     jmp short PM1000
+    109	00AA			     PM700:
+    110	00AA  8A F5			     mov dh,ch
+    111	00AC  EB 10			     jmp short PM1000
+    112	00AE			     PM800:
+    113	00AE  B8 70FF			     mov ax,70FFh
+    114	00B1  E8 0000e			     call ChangeAtribut	     ;снимем выделение текущего	пункта меню
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 3
+n.ASM
+
+
+
+    115	00B4  3A F5			     cmp dh,ch		     ;CH-начальн.коорд.,кот может иметь	пункт меню
+    116	00B6  74 04			     je	short PM900	     ;это самый	верхний	пункт
+    117	00B8  FE CE			     dec dh
+    118	00BA  EB 02			     jmp short PM1000
+    119	00BC			     PM900:
+    120	00BC  8A F1			     mov dh,cl
+    121	00BE			     PM1000:
+    122	00BE  B8 002F			     mov ax,002Fh	     ;маска
+    123	00C1  E8 0000e			     call ChangeAtribut
+    124	00C4  EB A6			     jmp PM300
+    125				     end
+Turbo Assembler	 Version 4.1	    23/04/03 16:38:00	    Page 4
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "23/04/03"
+??FILENAME			  Text	 "n	  "
+??TIME				  Text	 "16:38:00"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 N
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+BUF				  Word	 _TEXT:---- Extern
+CARETHIDE			  Near	 _TEXT:---- Extern
+CARETSHOW			  Near	 _TEXT:---- Extern
+CHANGEATRIBUT			  Near	 _TEXT:---- Extern
+FILLBACKBLOCK			  Near	 _TEXT:---- Extern
+GETBLOCK			  Near	 _TEXT:---- Extern
+GETMEM				  Near	 _TEXT:---- Extern
+GETMOUSEINFO			  Near	 _TEXT:---- Extern
+GETSTART			  Near	 _TEXT:---- Extern
+KEYPRESSED			  Near	 _TEXT:---- Extern
+MEN				  Byte	 DGROUP:0000
+MENU				  Near	 _TEXT:0000
+OUTDB				  Near	 _TEXT:---- Extern
+PM100				  Near	 _TEXT:003E
+PM1000				  Near	 _TEXT:00BE
+PM200				  Near	 _TEXT:0050
+PM300				  Near	 _TEXT:006C
+PM400				  Near	 _TEXT:0085
+PM500				  Near	 _TEXT:0092
+PM600				  Near	 _TEXT:009C
+PM700				  Near	 _TEXT:00AA
+PM800				  Near	 _TEXT:00AE
+PM900				  Near	 _TEXT:00BC
+POPUPMENU			  Near	 _TEXT:000C
+PUTBLOCK			  Near	 _TEXT:---- Extern
+READKEY				  Near	 _TEXT:---- Extern
+SHADOW				  Near	 _TEXT:---- Extern
+WIN1				  Near	 _TEXT:---- Extern
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0048 Word	  Public  DATA
+_TEXT				  16  00C6 Word	  Public  CODE
+
